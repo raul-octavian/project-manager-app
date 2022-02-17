@@ -1,0 +1,110 @@
+{
+  "users": [
+    {
+      "name": "john",
+      "username": "theJohn",
+      "email": "john@doe.com",
+      "id": "123kjgsskdfh",
+      "created_at_date": "01-01-2022",
+      "updated_at": "10-03-2022"
+    }
+  ],
+  "teams": [
+    {
+      "id": "bashdgiahgsda",
+      "teamName":"some cool team name",
+      "members": [
+        {
+          "id":"123kjgsskdfh",
+          "role":"owner"
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id":"aksdokasofaaa",
+      "name": "some cool project name",
+      "description": "project description",
+      "owner": "userID",
+      "stages": [
+        {
+          "name": "backlog",
+          "cards": [
+            {
+              "cardID": "cardID"
+            }
+          ]
+        }
+      ],
+      "timeSchedule": {
+        "startDate": "01-01-2022",
+        "dueDate": "31-05-2022",
+        "allocatedHours": 400,
+        "usedHours": 0
+      },
+      "members": {
+        "teamID": "asdhgaisgfiuha",
+        "members":[
+          {
+            "userId":"geriuhofhas"
+          }
+        ]
+      }
+    }
+  ],
+  "cards": [
+        {
+          "projectID": "ahsbfhbaskfj",
+          "name": "some cool card name",
+          "description":"card description",
+          "timeSchedule": {
+            "startDate": "01-01-2022",
+            "dueDate": "31-05-2022",
+            "allocatedHours": 400,
+            "usedHours": 0
+          },
+          "status": 0,
+          "members":[
+            {
+              "userID": "asdasdjhaisfb"
+            },
+            {
+              "userID":"asdasdjhaisfb"
+            }
+          ],
+          "labels": [
+            {
+              "labelName": "info"
+            },
+            {
+              "labelName": "FYI"
+            }
+          ]
+          
+        }
+      ],
+  "tasks": [
+        {
+          "cardID": "asjdnoaksnfoasf",
+          "taskID": "jafjahsfjhalskf",
+          "name":"task name",
+          "description": "task description",
+          "timeSchedule": {
+            "startDate": "01-01-2022",
+            "dueDate": "31-05-2022",
+            "allocatedHours": 20,
+            "usedHours": 0
+          },
+          "status": 0,
+          "members":[
+            {
+              "userID": "asdasdjhaisfb"
+            },
+            {
+              "userID":"asdasdjhaisfb"
+            }
+          ]
+        }
+      ]
+}
