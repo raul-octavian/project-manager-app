@@ -1,77 +1,63 @@
+const { array } = require("joi");
 const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
-const task = require("./task");
+
 
 const Schema = mongoose.Schema;
 
 let cardSchema = new Schema({
-  projectID: ObjectId,
-  name: {
-    type: String,
-    required: true,
+
+
+  card_stage: {
+    type: String
   },
-  description: {
-    type: String,
-  },
-  stage: {
+  card_name: {
     type: String,
   },
-  status: Number,
-  timeSchedule: {
-    start_Date: {
-      type: Date
-    },
-    due_Date: {
-      type: Date
-    },
-    allocated_Hours: {
-      type: Number
-    },
-    usedHours: {
-      type: Number,
-      default: 0,
-      min: 0,
-    }
+  card_description: {
+    type: String,
+  },
+  status: {
+    type: Boolean,
+    default: false,
+  },
+  card_start_Date: {
+    type: Date
+  },
+  card_due_Date: {
+    type: Date
+  },
+  card_allocated_Hours: {
+    type: Number
+  },
+  card_usedHours: {
+    type: Number,
+    default: 0,
+    min: 0,
   },
 
-  // start_Date: {
-  //   type: Date
-  // },
-  // due_Date: {
-  //   type: Date
-  // },
-  // allocated_Hours: {
-  //   type: Number
-  // },
-  // usedHours: {
-  //   type: Number,
-  //   default: 0,
-  //   min: 0,
-  // },
-  members: [
+  card_members: [
     {
       userID: {
-        type: ObjectId
+        type: String
 
       },
-    }
-
-  ],
-  labels: [
-    {
-      labelName: String,
-      labelColor: String,
     }
   ],
 
   created_at_date: {
     type: Date,
+    immutable: true,
     default: Date.now,
   },
   updated_at: {
     type: Date,
     default: Date.now,
   },
+
+  tasks: [
+    { type: Schema.Types.ObjectId, ref: 'task' }
+  ]
 });
 
 module.exports = mongoose.model('card', cardSchema);

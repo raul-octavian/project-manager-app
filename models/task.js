@@ -1,53 +1,42 @@
+const { array } = require("joi");
 const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
+
 
 const Schema = mongoose.Schema;
 
 let taskSchema = new Schema({
-  cardID: ObjectId,
-  name: {
+
+
+  task_name: {
     type: String,
     required: true,
   },
-  description: {
+  task_description: {
     type: String,
   },
-  status: Number,
-  timeSchedule: {
-    start_Date: {
-      type: Date
-    },
-    due_Date: {
-      type: Date
-    },
-    allocated_Hours: {
-      type: Number
-    },
-    usedHours: {
-      type: Number,
-      default: 0,
-      min: 0,
-    }
+  status: {
+    type: Boolean
   },
-
-  // start_Date: {
-  //   type: Date
-  // },
-  // due_Date: {
-  //   type: Date
-  // },
-  // allocated_Hours: {
-  //   type: Number
-  // },
-  // usedHours: {
-  //   type: Number,
-  //   default: 0,
-  //   min: 0,
-  // },
+  start_Date: {
+    type: Date
+  },
+  due_Date: {
+    type: Date
+  },
+  allocated_Hours: {
+    type: Number
+  },
+  usedHours: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  
   members: [
     {
       userID: {
-        type: ObjectId
+        type: String
 
       },
     }
@@ -56,12 +45,13 @@ let taskSchema = new Schema({
 
   created_at_date: {
     type: Date,
+    immutable: true, 
     default: Date.now,
   },
   updated_at: {
     type: Date,
     default: Date.now,
-  }
-});
+  },
+})
 
 module.exports = mongoose.model('task', taskSchema);
