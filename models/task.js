@@ -16,32 +16,26 @@ let taskSchema = new Schema({
     type: String,
   },
   status: {
-    type: Boolean
+    type: Boolean,
+    default: false,
   },
-  start_Date: {
+  task_members: [
+    { type: Schema.Types.ObjectId, ref: 'user' }
+  ],
+  task_start_Date: {
     type: Date
   },
-  due_Date: {
+  task_due_Date: {
     type: Date
   },
-  allocated_Hours: {
+  task_allocated_Hours: {
     type: Number
   },
-  usedHours: {
+  task_used_Hours: {
     type: Number,
     default: 0,
     min: 0,
   },
-  
-  members: [
-    {
-      userID: {
-        type: String
-
-      },
-    }
-
-  ],
 
   created_at_date: {
     type: Date,

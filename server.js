@@ -2,7 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const userRoute = require('./routes/user');
 const projectRoute = require('./routes/project');
-const cardRoute = require('./routes/card')
+const cardRoute = require('./routes/card');
+const taskRoute = require('./routes/task');
 
 const {verifyToken} = require('./validate')
 
@@ -36,6 +37,7 @@ mongoose.connect(HOST, {
 app.use('/api/user', userRoute)
 app.use('/api/projects/', verifyToken, projectRoute)
 app.use('/api/projects/', verifyToken, cardRoute)
+app.use('/api/projects/', verifyToken, taskRoute)
 
 
 // start server

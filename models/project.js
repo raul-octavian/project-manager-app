@@ -40,11 +40,7 @@ let projectSchema = new Schema({
     }
   },
   members: [
-    {
-      userID: {
-        type: String
-      },
-    }
+      { type: Schema.Types.ObjectId, ref: 'user' }
   ],
   created_at_date: {
     type: Date,
