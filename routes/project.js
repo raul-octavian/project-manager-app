@@ -24,18 +24,19 @@ router.post('/:user/create', (req, res) => {
 
 router.get('/:user/all', (req, res) => {
   project.find({ "members.userID": req.params.user })
-    .populate({
-      path: 'cards',
-      populate: {
-        path: 'card_members',
-      },
-      populate: {
-        path: 'tasks',
-        populate: {
-          path: 'task_members'
-        }
-      }
-    })
+    // .populate({
+    //   path: 'cards',
+    //   populate: {
+    //     path: 'tasks',
+    //     populate: {
+    //       path: 'task_members'
+    //     }
+    //   }
+    // })
+    .populate('cards')
+    .populate('card.card_members')
+    .populate('cards.tasks')
+    .populate('cards.tasks.task_members')
     .populate('members')
     .then(data => {
       if (data) {
@@ -54,16 +55,10 @@ router.get('/:user/all', (req, res) => {
 
 router.get('/:project', (req, res) => {
   project.findById(req.params.project)
-    .populate({
-      path: 'cards',
-      populate: {
-        path: 'card_members',
-        path: 'tasks',
-        populate: {
-          path: 'task_members'
-        }
-      }
-    })
+    .populate('cards')
+    .populate('card.card_members')
+    .populate('cards.tasks')
+    .populate('cards.tasks.task_members')
     .populate('members')
     .then(data => {
       if (data) {

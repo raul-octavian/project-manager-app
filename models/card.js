@@ -37,7 +37,7 @@ let cardSchema = new Schema({
   },
 
   card_members: [
-    {type: Schema.Types.ObjectId, ref:'user'}
+    { type: Schema.Types.ObjectId, ref: 'user' }
   ],
 
   created_at_date: {
