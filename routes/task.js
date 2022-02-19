@@ -56,14 +56,15 @@ router.put('/tasks/:task/update', (req, res) => {
 
 router.get('/tasks/:task', (req, res) => {
   task.findById(req.params.task)
+    .populate('task_members')
     .then(data => {
       if (!data) {
-        res.status(400).send({ message: `cannot find the task with id ${task_id}` })
+        res.status(400).send({ message: `cannot find the task with id ${req.params.task}` })
       } else {
         res.status(200).send(data)
       }
     }).catch(err => {
-      res.status(500).send({ message: `error finding task with id ${task_id},  ${err.message}` })
+      res.status(500).send({ message: `error finding task with id ${req.params.task},  ${err.message}` })
     })
 })
 

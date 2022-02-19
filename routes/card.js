@@ -37,7 +37,14 @@ router.post('/:user/:project/:stage/create-card', async (req, res) => {
 //get one card
 
 router.get('/cards/:card', (req, res) => {
-  card.findOne({ "_id": req.params.card }).populate('tasks')
+  card.findOne({ "_id": req.params.card })
+    .populate({
+      path: 'tasks',
+      populate: {
+        path: 'task_members',
+      },
+    })
+    .populate('members')
     .then(data => {
 
       if (data) {
