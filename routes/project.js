@@ -1,9 +1,9 @@
 const router = require('express').Router();
 const { resetWatchers } = require('nodemon/lib/monitor/watch');
-const card = require('../models/card');
-const task = require('../models/task')
-const project = require('../models/project');
-const user = require('../models/user');
+const Card = require('../models/card');
+const Task = require('../models/task')
+const Project = require('../models/project');
+const User = require('../models/user');
 const { route } = require('./user');
 
 
@@ -12,7 +12,7 @@ const { route } = require('./user');
 router.post('/:user/create', (req, res) => {
   data = req.body;
 
-  project.insertMany(data)
+  Project.insertMany(data)
     .then(data => {
       res.status(200).send(data);
     }).catch(err => {
@@ -23,21 +23,7 @@ router.post('/:user/create', (req, res) => {
 //get all project where user is member
 
 router.get('/:user/all', (req, res) => {
-  project.find({ "members.userID": req.params.user })
-    // .populate({
-    //   path: 'cards',
-    //   populate: {
-    //     path: 'tasks',
-    //     populate: {
-    //       path: 'task_members'
-    //     }
-    //   }
-    // })
-    .populate('cards')
-    .populate('card.card_members')
-    .populate('cards.tasks')
-    .populate('cards.tasks.task_members')
-    .populate('members')
+  Project.find({ "members": req.params.user })
     .then(data => {
       if (data) {
         res.status(200).send(data);
@@ -54,17 +40,12 @@ router.get('/:user/all', (req, res) => {
 
 
 router.get('/:project', (req, res) => {
-  project.findById(req.params.project)
-    .populate('cards')
-    .populate('card.card_members')
-    .populate('cards.tasks')
-    .populate('cards.tasks.task_members')
-    .populate('members')
+  Project.findById(req.params.project)
     .then(data => {
       if (data) {
         res.status(200).send(data);
       } else {
-        res.status(200).send({message : "The search found no result, the project might have been deleted, make sure the project id "+ req.params.project + " is correct"})
+        res.status(200).send({ message: "The search found no result, the project might have been deleted, make sure the project id " + req.params.project + " is correct" })
       }
     }).catch(err => {
       res.status(500).send({ message: `there was an error ${err.message}` });
@@ -73,20 +54,7 @@ router.get('/:project', (req, res) => {
 //get project where user is owner
 
 router.get('/:user/owned', (req, res) => {
-  project.find({ "owner": req.params.user })
-    .populate({
-      path: 'cards',
-      populate: {
-        path: 'card_members',
-      },
-      populate: {
-        path: 'tasks',
-        populate: {
-          path: 'task_members'
-        }
-      }
-    })
-    .populate('members')
+  Project.find({ "owner": req.params.user })
     .then(data => {
       if (data) {
         res.status(200).send(data);
@@ -98,20 +66,71 @@ router.get('/:user/owned', (req, res) => {
     })
 });
 
+//add stage
+
+router.put('/:project/add-stage', (req, res) => {
+
+  Project.findByIdAndUpdate(req.params.project, { $addToSet: { stages: req.body.name } }, { new: true })
+    .then(data => {
+      if (data) {
+        console.log(data);
+        res.status(201).send(data);
+      } else {
+        res.status(400).send({message: "something went wrong"});
+      }
+    }).catch(err => {
+      res.status(500).send({ message: `error updating project with id ${req.params.project},  ${err.message}` })
+  })
+})
+
+//remove stage
+
+router.put('/:project/remove-stage', async (req, res) => {
+  
+  try {
+
+    const project = await Project.findById(req.params.project);
+    const cards = await project?.cards;
+    const cardsOnStage = await cards.map(el => el.stage == req.body.name);
+    console.log("cards on stage", cardsOnStage);
+
+    if (cardsOnStage.length) {
+      res.status(200).send({ message: "you have cards registers on this stage, remove them and then retry" })
+
+    } else {
+
+      Project.findByIdAndUpdate(req.params.project, { $pull: { stages: req.body.name } }, { new: true })
+        .then(data => {
+          if (data) {
+            res.status(201).send(data);
+          } else {
+            res.status(400).send({ message: "something went wrong" });
+          }
+        }).catch(err => {
+          res.status(500).send({ message: `error removing project with id ${req.params.project},  ${err.message}` })
+        })
+    }
+
+  } catch (err) {
+      res.status(500).send({ message: "delete aborted " + err.message })
+  }
+
+})
+
 //update projects where user in member
 
-router.put('/:user/:id', (req, res) => {
-  id = req.params.id;
+router.put('/:user/:project', (req, res) => {
+  project_id = req.params.project;
 
-  project.findByIdAndUpdate(id, req.body)
+  Project.findByIdAndUpdate(project_id, req.body)
     .then(data => {
       if (!data) {
-        res.status(400).send({ message: `cannot find the project with id ${id}` })
+        res.status(400).send({ message: `cannot find the project with id ${project_id}` })
       } else {
         res.status(201).send({ message: "project updated successfully" })
       }
     }).catch(err => {
-      res.status(500).send({ message: `error updating project with id ${id},  ${err.message}` })
+      res.status(500).send({ message: `error updating project with id ${project_id},  ${err.message}` })
     })
 });
 
@@ -119,7 +138,7 @@ router.put('/:user/:id', (req, res) => {
 
 router.put('/:user/:project/members', async (req, res) => {
 
-  userInfo = await user.findOne({ email: req.body.email })
+  userInfo = await User.findOne({ email: req.body.email })
     .catch(err => {
       res.status(500).send({ message: `there was an error adding user ${err.message}` })
     });
@@ -127,12 +146,12 @@ router.put('/:user/:project/members', async (req, res) => {
   if (!userInfo) {
     res.status(200).send({ message: `there is no user with ${req.body.email} email address in our database, if email is correct we will send him an join link.` })
   };
-  userExistsOnProject = await project.find({ _id: req.params.project, "members": userInfo.id });
+  userExistsOnProject = await Project.find({ _id: req.params.project, "members": userInfo.id });
 
   if (userExistsOnProject.length) {
     res.status(200).send({ message: "user is already a member on this project" })
   } else {
-    project.updateOne({ _id: req.params.project }, { $addToSet: { members: userInfo.id } })
+    Project.updateOne({ _id: req.params.project }, { $addToSet: { members: userInfo.id } })
       .then(data => {
         if (data) {
           res.status(200).send({ message: userInfo.id })
@@ -147,7 +166,7 @@ router.put('/:user/:project/members', async (req, res) => {
 
 router.put('/:user/:project/members/remove', async (req, res) => {
 
-  userInfo = await user.findOne({ email: req.body.email })
+  userInfo = await User.findOne({ email: req.body.email })
     .catch(err => {
       res.status(500).send({ message: `there was an error finding user ${err.message}` })
     });
@@ -155,15 +174,15 @@ router.put('/:user/:project/members/remove', async (req, res) => {
   if (!userInfo) {
     res.status(200).send({ message: `there is no user with ${req.body.email} email address in our database, the account might have been deleted` })
   };
-  userExistsOnProject = await project.find({ _id: req.params.project, "members": userInfo.id });
+  userExistsOnProject = await Project.find({ _id: req.params.project, "members": userInfo.id });
 
   if (userExistsOnProject.length) {
-    project.findOneAndUpdate({ _id: req.params.project, "members": userInfo.id }, { $pull: { members: userInfo.id } }, { new: true })
+    Project.findOneAndUpdate({ _id: req.params.project, "members": userInfo.id }, { $pull: { members: userInfo.id } }, { new: true })
       .then(project =>
         res.status(201).send(project))
       .catch(err => {
         res.status(500).send({ message: `there was an error removing user ${err.message}` })
-    })
+      })
   }
 })
 
@@ -174,26 +193,26 @@ router.delete('/:project/delete', async (req, res) => {
   const project_id = req.params.project;
 
   try {
-    let foundCards = await project.findById(req.params.project);
+    let foundCards = await Project.findById(req.params.project);
     let deletedTasks = []
     let deletedCards = []
     if (foundCards?.cards.length) {
       for (const el of foundCards.cards) {
-        deletedTasks = await card.findById(el).then(response => {
+        deletedTasks = await Card.findById(el).then(response => {
           if (response?.tasks.length) {
             for (const item of response.tasks) {
-              task.findByIdAndRemove(item).then(
+              Task.findByIdAndRemove(item).then(
                 console.log(`tasks deleted`, item)
               )
             }
           }
         });
-        deletedCards = await card.findByIdAndDelete(el)
+        deletedCards = await Card.findByIdAndDelete(el)
           .then(console.log("card deleted"))
       }
     }
 
-    project.findByIdAndRemove(project_id).then(response => {
+    Project.findByIdAndRemove(project_id).then(response => {
       if (response) {
         res.status(201).send({ message: "project deleted" })
       } else {
@@ -203,9 +222,9 @@ router.delete('/:project/delete', async (req, res) => {
       res.status(500).send({ message: "error deleting the card with id: " + card_id + "error: " + err.message })
     })
   } catch (err) {
-    res.status(500).send({message: "delete aborted " + err.message})
+    res.status(500).send({ message: "delete aborted " + err.message })
   }
-  
+
 })
 
 

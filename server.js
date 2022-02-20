@@ -4,6 +4,7 @@ const userRoute = require('./routes/user');
 const projectRoute = require('./routes/project');
 const cardRoute = require('./routes/card');
 const taskRoute = require('./routes/task');
+// const stageRoute = require('./routes/stage')
 
 const {verifyToken} = require('./validate')
 
@@ -38,6 +39,7 @@ app.use('/api/user', userRoute)
 app.use('/api/projects/', verifyToken, projectRoute)
 app.use('/api/projects/', verifyToken, cardRoute)
 app.use('/api/projects/', verifyToken, taskRoute)
+// app.use('/api/projects/', verifyToken, stageRoute)
 
 
 // start server

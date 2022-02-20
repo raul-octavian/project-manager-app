@@ -1,9 +1,9 @@
 const router = require('express').Router();
 const { resetWatchers } = require('nodemon/lib/monitor/watch');
-const project = require("../models/project");
-const card = require("../models/card");
-const task = require("../models/task")
-const user = require('../models/user');
+const Project = require("../models/project");
+const Card = require("../models/card");
+const Task = require("../models/task")
+const User = require('../models/user');
 const { route } = require('./user');
 const { verifyToken } = require('../validate');
 const { response } = require('express');
@@ -12,24 +12,31 @@ const { response } = require('express');
 //create card
 
 router.post('/:user/:project/:stage/create-card', async (req, res) => {
-  card.insertMany(req.body)
-    .then(
-      data => {
-        if (data) {
-          const id = data[0].toObject()._id
-          project.updateOne({ _id: req.params.project }, { $push: { cards: `${id}` } }, { new: true })
-            .then(project => {
+  try {
+    Card.insertMany(req.body)
+      .then(
+        data => {
+          if (data) {
+            const id = data[0].toObject()._id
+            Project.updateOne({ _id: req.params.project }, { $push: { cards: `${id}` } }, { new: true })
+              .then(project => {
 
-              if (project) {
-                res.status(200).send(data)
-              } else {
-                res.status(400).send({ message: "there was an error retrieving project information or creating the card" })
-              }
-            })
-        }
-      }).catch(err => {
-        res.status(500).send({ message: `there was an error creating card ${err.message}` })
-      })
+                if (project) {
+                  res.status(200).send(data)
+                } else {
+                  res.status(400).send({ message: "there was an error retrieving project information or creating the card" })
+                }
+              })
+          }
+        }).catch(err => {
+          res.status(500).send({ message: `there was an error creating card ${err.message}` })
+        })
+
+  } catch (err) {
+    res.status(500).send({ message: `there was an error creating card ${err.message}` })
+    
+  }
+
 })
 
 
@@ -37,14 +44,7 @@ router.post('/:user/:project/:stage/create-card', async (req, res) => {
 //get one card
 
 router.get('/cards/:card', (req, res) => {
-  card.findOne({ "_id": req.params.card })
-    .populate({
-      path: 'tasks',
-      populate: {
-        path: 'task_members',
-      },
-    })
-    .populate('members')
+  Card.findOne({ "_id": req.params.card })
     .then(data => {
 
       if (data) {
@@ -63,17 +63,35 @@ router.get('/cards/:card', (req, res) => {
 router.put('/cards/:card/update', (req, res) => {
   const id = req.params.card;
 
-  card.findByIdAndUpdate(id, req.body)
+  Card.findByIdAndUpdate(id, req.body, {new: true})
     .then(data => {
       if (!data) {
         res.status(400).send({ message: `cannot find the card with id ${id}` })
       } else {
-        res.status(201).send({ message: "card updated successfully" })
+        res.status(201).send(data)
       }
     }).catch(err => {
       res.status(500).send({ message: `error updating card with id ${id},  ${err.message}` })
     })
 })
+
+//set stage
+
+router.put('/cards/:card/set-stage', (req, res) => {
+  const id = req.params.card;
+
+  Card.findByIdAndUpdate(id, req.body, {new: true})
+    .then(data => {
+      if (!data) {
+        res.status(400).send({ message: `cannot find the card with id ${id}` })
+      } else {
+        res.status(201).send(data)
+      }
+    }).catch(err => {
+      res.status(500).send({ message: `error updating card with id ${id},  ${err.message}` })
+    })
+})
+
 
 //delete
 
@@ -83,21 +101,21 @@ router.delete('/cards/:project/:card/delete', async (req, res) => {
 
   try {
 
-    let deletedTasks = await card.findById(card_id).then(response => {
-      if (response.tasks.length) {
+    let deletedTasks = await Card.findById(card_id).then(response => {
+      if (response?.tasks.length) {
         for (const item of response.tasks) {
-          task.findByIdAndRemove(item).then(
+          Task.findByIdAndRemove(item).then(
             response => console.log(response)
           )
         }
       }
     })
 
-    card.findByIdAndRemove(card_id).then(response => {
+    Card.findByIdAndRemove(card_id).then(response => {
       if (response) {
-        project.findByIdAndUpdate(project_id, { $pull: { cards: card_id } }, { new: true })
+        Project.findByIdAndUpdate(project_id, { $pull: { cards: card_id } }, { new: true })
           .then(data => {
-            if (data.cards.find(item => item == card_id)) {
+            if (data?.cards.find(item => item == card_id)) {
               res.status(400).send({ message: "cannot and update project " + project_id })
             } else {
               res.status(201).send({ message: "card deleted from project" })
@@ -121,7 +139,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
 
   try {
 
-    userInfo = await user.findOne({ email: req.body.email })
+    userInfo = await User.findOne({ email: req.body.email })
       .catch(err => {
         res.status(500).send({ message: `there was an error adding user ${err.message}` })
       });
@@ -129,9 +147,9 @@ router.put('/:user/:project/:card/members', async (req, res) => {
     if (!userInfo) {
       res.status(200).send({ message: `there is no user with ${req.body.email} email address in our database, if email is correct we will send him an join link.` })
     };
-    const userExistsOnProject = await project.find({ _id: req.params.project, "members": userInfo.id });
+    const userExistsOnProject = await Project.find({ _id: req.params.project, "members": userInfo.id });
 
-    const userExistsOnCard = await card.find({ _id: req.params.card, "card_members": userInfo.id });
+    const userExistsOnCard = await Card.find({ _id: req.params.card, "card_members": userInfo.id });
 
     const cardMembers = [];
 
@@ -139,9 +157,9 @@ router.put('/:user/:project/:card/members', async (req, res) => {
 
     if (userExistsOnProject.length) {
       if (userExistsOnCard.length) {
-        cardMembers = await res.status(200).send({ message: "user is already a member on this card" })
+        cardMembers = res.status(200).send({ message: "user is already a member on this card" })
       } else {
-        card.updateOne({ _id: req.params.card }, { $addToSet: { card_members: userInfo.id } })
+        Card.updateOne({ _id: req.params.card }, { $addToSet: { card_members: userInfo.id } })
           .then(data => {
             if (data) {
               res.status(200).send({ message: "user added to card " + userInfo.id })
@@ -151,18 +169,18 @@ router.put('/:user/:project/:card/members', async (req, res) => {
           })
       }
     } else {
-      project.updateOne({ _id: req.params.project }, { $addToSet: { members: userInfo.id } })
+      Project.updateOne({ _id: req.params.project }, { $addToSet: { members: userInfo.id } })
         .then(data => {
           if (data) {
-            console.log(userInfo.id )
+            console.log(userInfo.id)
           }
         }).catch(err => {
           res.status(500).send({ message: `there was an error adding user ${err.message}` })
         }).then(
-          card.updateOne({ _id: req.params.card }, { $addToSet: { card_members: userInfo.id } })
+          Card.updateOne({ _id: req.params.card }, { $addToSet: { card_members: userInfo.id } })
             .then(data => {
               if (data) {
-                res.status(200).send({ message: "user added to card and project"  })
+                res.status(200).send({ message: "user added to card and project" })
               }
             }).catch(err => {
               res.status(500).send({ message: `there was an error adding user ${err.message}` })
@@ -170,10 +188,10 @@ router.put('/:user/:project/:card/members', async (req, res) => {
         )
     }
   } catch (err) {
-    res.status(500).send({message: "err.message"})
+    res.status(500).send({ message: "err.message" })
   }
 
-  
+
 });
 
 // remove member from card
@@ -181,10 +199,10 @@ router.put('/:user/:project/:card/members', async (req, res) => {
 
 router.put('/:user/:project/:card/members/remove', async (req, res) => {
 
-  try { 
+  try {
 
 
-    userInfo = await user.findOne({ email: req.body.email })
+    userInfo = await User.findOne({ email: req.body.email })
       .catch(err => {
         res.status(500).send({ message: `there was an error finding user ${err.message}` })
       });
@@ -192,11 +210,11 @@ router.put('/:user/:project/:card/members/remove', async (req, res) => {
     if (!userInfo) {
       res.status(200).send({ message: `there is no user with ${req.body.email} email address in our database, the account might have been deleted` })
     };
-    const userExistsOnCard = await card.find({ _id: req.params.card, "card_members": userInfo.id });
+    const userExistsOnCard = await Card.find({ _id: req.params.card, "card_members": userInfo.id });
 
     if (userExistsOnCard.length) {
       console.log("if passed");
-      card.updateOne({ _id: req.params.card }, { $pull: { card_members: userInfo.id } })
+      Card.updateOne({ _id: req.params.card }, { $pull: { card_members: userInfo.id } })
         .then(data => {
           if (data) {
             console.log(data);
@@ -212,7 +230,7 @@ router.put('/:user/:project/:card/members/remove', async (req, res) => {
     res.status(500).send({ message: "err.message" })
   }
 
-  
+
 })
 
 module.exports = router;

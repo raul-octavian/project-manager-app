@@ -1,10 +1,12 @@
 const { array } = require("joi");
 const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
+const autopopulate = require("mongoose-autopopulate")
 
 const Schema = mongoose.Schema;
 
-let projectSchema = new Schema({
+
+let ProjectSchema = new Schema({
 
 
   name: {
@@ -17,11 +19,11 @@ let projectSchema = new Schema({
   owner: {
     type: String,
   },
-  stages: [
-    {
-      name: String,
-    }
-  ],
+
+  stages: {
+    type: [String],
+    'default':[ "backlog", "To-do", "Doing", "Test", "Complete" ]
+  },
 
   timeSchedule: {
     start_Date: {
@@ -40,7 +42,7 @@ let projectSchema = new Schema({
     }
   },
   members: [
-      { type: Schema.Types.ObjectId, ref: 'user' }
+    { type: Schema.Types.ObjectId, ref: 'User', autopopulate: true }
   ],
   created_at_date: {
     type: Date,
@@ -52,8 +54,10 @@ let projectSchema = new Schema({
     default: Date.now,
   },
   cards: [
-    { type: Schema.Types.ObjectId, ref: 'card' }
+    { type: Schema.Types.ObjectId, ref: 'Card', autopopulate: true }
   ],
 });
 
-module.exports = mongoose.model('project', projectSchema);
+ProjectSchema.plugin(autopopulate);
+
+module.exports = mongoose.model('Project', ProjectSchema);

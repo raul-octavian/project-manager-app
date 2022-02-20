@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const user = require('../models/user');
+const User = require('../models/user');
 const { registerValidation, loginValidation, updateValidation, verifyToken } = require('../validate');
 
 
@@ -18,7 +18,7 @@ router.post('/register', async (req, res) => {
 
   //email exists
 
-  const emailExists = await user.findOne({ email: req.body.email });
+  const emailExists = await User.findOne({ email: req.body.email });
 
   if (emailExists) {
     return res.status(400).json({ error: "email exists, please login" })
@@ -30,7 +30,7 @@ router.post('/register', async (req, res) => {
 
 
   //create user object
-  const userObj = new user({
+  const userObj = new User({
     name: req.body.name,
     email: req.body.email,
     password
@@ -58,7 +58,7 @@ router.post('/login', async (req, res) => {
 
   //find user
 
-  const foundUser = await user.findOne({ email: req.body.email });
+  const foundUser = await User.findOne({ email: req.body.email });
 
   if (!foundUser) {
     return res.status(400).json({ error: "email is wrong" })
@@ -102,20 +102,20 @@ router.post('/login', async (req, res) => {
 //get user information
 
 router.get('/:user', verifyToken, (req, res) => {
-  user.findById(req.params.user)
+  User.findById(req.params.user)
     .then(data => {
       if (!data) {
-        res.status(200).send({message: "there are no results, please login to see your information"})
+        res.status(200).send({ message: "there are no results, please login to see your information" })
       } else {
         res.status(200).send(data);
       }
-  })
+    })
 })
 
 //update user
 
 router.put("/:user/update", verifyToken, async (req, res) => {
-  
+
   const { error } = await updateValidation(req.body);
 
   if (error) {
@@ -123,7 +123,7 @@ router.put("/:user/update", verifyToken, async (req, res) => {
     return res.status(400).json({ error: error.details[0].message })
   }
 
-  user.findByIdAndUpdate(req.params.user, req.body)
+  User.findByIdAndUpdate(req.params.user, req.body)
     .then(data => {
       if (!data) {
         res.status(400).send({ message: "cannot find user with id " + id })

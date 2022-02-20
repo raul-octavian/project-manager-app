@@ -1,11 +1,13 @@
 const { array } = require("joi");
 const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
+const autopopulate = require("mongoose-autopopulate")
+
 
 
 const Schema = mongoose.Schema;
 
-let taskSchema = new Schema({
+let TaskSchema = new Schema({
 
 
   task_name: {
@@ -20,7 +22,7 @@ let taskSchema = new Schema({
     default: false,
   },
   task_members: [
-    { type: Schema.Types.ObjectId, ref: 'user' }
+    { type: Schema.Types.ObjectId, ref: 'User', autopopulate: true }
   ],
   task_start_Date: {
     type: Date
@@ -47,5 +49,6 @@ let taskSchema = new Schema({
     default: Date.now,
   },
 })
+TaskSchema.plugin(autopopulate);
 
-module.exports = mongoose.model('task', taskSchema);
+module.exports = mongoose.model('Task', TaskSchema);
