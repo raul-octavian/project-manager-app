@@ -38,17 +38,10 @@ let TaskSchema = new Schema({
     default: 0,
     min: 0,
   },
-
-  created_at_date: {
-    type: Date,
-    immutable: true, 
-    default: Date.now,
-  },
-  updated_at: {
-    type: Date,
-    default: Date.now,
-  },
-})
+},
+{
+    timestamps: true
+  })
 TaskSchema.plugin(autopopulate);
 
 module.exports = mongoose.model('Task', TaskSchema);

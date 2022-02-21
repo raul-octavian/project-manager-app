@@ -45,18 +45,8 @@ let CardSchema = new Schema({
     default: 0,
     min: 0,
   },
-
-  created_at_date: {
-    type: Date,
-    immutable: true,
-    default: Date.now,
-  },
-  updated_at: {
-    type: Date,
-    default: Date.now,
-  },
-
-
+}, {
+  timestamps: true
 })
 CardSchema.plugin(autopopulate);
 

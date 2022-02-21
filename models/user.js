@@ -17,15 +17,10 @@ let UserSchema = new Schema({
   },
   username: {
     type: String,
-  },
-  created_at_date: {
-    type: Date,
-    default: Date.now,
-  },
-  updated_at: {
-    type: Date,
-    default: Date.now,
   }
-});
+},
+  {
+    timestamps: true
+  });
 
 module.exports = mongoose.model('User', UserSchema);

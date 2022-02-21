@@ -44,18 +44,12 @@ let ProjectSchema = new Schema({
   members: [
     { type: Schema.Types.ObjectId, ref: 'User', autopopulate: true }
   ],
-  created_at_date: {
-    type: Date,
-    immutable: true, 
-    default: Date.now,
-  },
-  updated_at: {
-    type: Date,
-    default: Date.now,
-  },
   cards: [
     { type: Schema.Types.ObjectId, ref: 'Card', autopopulate: true }
   ],
+},
+{
+  timestamps: true
 });
 
 ProjectSchema.plugin(autopopulate);
