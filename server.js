@@ -6,12 +6,19 @@ const cardRoute = require('./routes/card');
 const taskRoute = require('./routes/task');
 // const stageRoute = require('./routes/stage')
 
-const {verifyToken} = require('./validate')
+const { verifyToken } = require('./validate')
 
 
 require('dotenv-flow').config();
 
 const app = express();
+
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT,DELETE"); // If using .fetch and not axios
+  res.header("Access-Control-Allow-Headers", "auth-token, Origin, X-Requested-With, Content-Type, Accept");
+  next();
+})
 
 app.use(express.json());
 
@@ -36,7 +43,7 @@ mongoose.connect(HOST, {
 //use routes
 
 app.use('/api/user', userRoute)
-app.use('/api/projects/', verifyToken, projectRoute)
+app.use('/api/projects/', projectRoute)
 app.use('/api/projects/', verifyToken, cardRoute)
 app.use('/api/projects/', verifyToken, taskRoute)
 // app.use('/api/projects/', verifyToken, stageRoute)

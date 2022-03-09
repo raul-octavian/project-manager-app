@@ -22,7 +22,7 @@ let ProjectSchema = new Schema({
 
   stages: {
     type: [String],
-    'default':[ "backlog", "To-do", "Doing", "Test", "Complete" ]
+    'default': ["backlog", "To-do", "Doing", "Test", "Complete"]
   },
 
   timeSchedule: {
@@ -35,7 +35,7 @@ let ProjectSchema = new Schema({
     allocated_Hours: {
       type: Number
     },
-    usedHours: {
+    used_Hours: {
       type: Number,
       default: 0,
       min: 0,
@@ -48,9 +48,9 @@ let ProjectSchema = new Schema({
     { type: Schema.Types.ObjectId, ref: 'Card', autopopulate: true }
   ],
 },
-{
-  timestamps: true
-});
+  {
+    timestamps: true
+  });
 
 ProjectSchema.plugin(autopopulate);
 
