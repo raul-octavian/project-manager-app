@@ -2,6 +2,7 @@ const Joi = require('joi');
 const jwt = require('jsonwebtoken');
 
 const registerValidation = (data) => {
+  console.log("hello data", data);
   const schema = Joi.object(
     {
       name: Joi.string().max(255).required(),
