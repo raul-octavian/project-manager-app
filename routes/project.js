@@ -26,7 +26,19 @@ router.get('/:user/all', (req, res) => {
   Project.find({ "members": req.params.user })
     .then(data => {
       if (data) {
-        res.status(200).send(data);
+        projectNames = data.map((item) => {
+          return {
+            name: item.name,
+            id: item._id,
+            description: item.description,
+            due_date: item.timeSchedule.due_Date,
+            available_hours: item.timeSchedule.allocated_Hours - item.timeSchedule.used_Hours,
+            percentUsed: -item.timeSchedule.used_Hours / -item.timeSchedule.allocated_Hours * 100 + '%',
+            percentAvailable: 100 - (-item.timeSchedule.used_Hours / -item.timeSchedule.allocated_Hours * 100) + '%'
+
+          }
+        })
+        res.status(200).send(projectNames);
       } else {
         res.status(400).send({ message: "there are no result found" })
       }
@@ -76,17 +88,17 @@ router.put('/:project/add-stage', (req, res) => {
         console.log(data);
         res.status(201).send(data);
       } else {
-        res.status(400).send({message: "something went wrong"});
+        res.status(400).send({ message: "something went wrong" });
       }
     }).catch(err => {
       res.status(500).send({ message: `error updating project with id ${req.params.project},  ${err.message}` })
-  })
+    })
 })
 
 //remove stage
 
 router.put('/:project/remove-stage', async (req, res) => {
-  
+
   try {
 
     const project = await Project.findById(req.params.project);
@@ -112,7 +124,7 @@ router.put('/:project/remove-stage', async (req, res) => {
     }
 
   } catch (err) {
-      res.status(500).send({ message: "delete aborted " + err.message })
+    res.status(500).send({ message: "delete aborted " + err.message })
   }
 
 })

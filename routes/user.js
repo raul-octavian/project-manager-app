@@ -95,7 +95,7 @@ router.post('/login', async (req, res) => {
   res.header("auth-token", token).json({
 
     error: null,
-    data: { user_id: foundUser._id, token }
+    data: { user_id: foundUser._id, name: foundUser.name, username: foundUser.username, email: foundUser.email, token }
   });
 
 })
