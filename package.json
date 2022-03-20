@@ -29,5 +29,8 @@
     "mongoose": "^6.2.1",
     "mongoose-autopopulate": "^0.16.0",
     "nodemon": "^2.0.15"
+  },
+   "engines": {
+    "node": "16.14.0"
   }
 }
