@@ -36,9 +36,9 @@ mongoose.connect(HOST, {
 
 
 // test
-// app.get('/api/user', (req, res) => {
-//   res.status(200).send({message : "you are in user route, use '/api/user/register' to register or 'api/user/login' to login "})
-// })
+app.get('/api/user', (req, res) => {
+  res.status(200).send({ message: "you are in user route, use '/api/user/register' to register or 'api/user/login' to login " })
+})
 
 //use routes
 
