@@ -26,7 +26,7 @@ let CardSchema = new Schema({
     default: false,
   },
   tasks: [
-    { type: Schema.Types.ObjectId, ref: 'Task', autopopulate : true }
+    { type: Schema.Types.ObjectId, ref: 'Task', autopopulate: true }
   ],
   card_members: [
     { type: Schema.Types.ObjectId, ref: 'User', autopopulate: true }

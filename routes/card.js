@@ -11,9 +11,12 @@ const { response } = require('express');
 
 //create card
 
-router.post('/:user/:project/:stage/create-card', async (req, res) => {
+router.post('/:user/:project/create-card', async (req, res) => {
   try {
-    Card.insertMany(req.body)
+    Card.insertMany({
+      card_name: req.body.card_name,
+      stage: req.body.stage
+    })
       .then(
         data => {
           if (data) {
@@ -34,7 +37,7 @@ router.post('/:user/:project/:stage/create-card', async (req, res) => {
 
   } catch (err) {
     res.status(500).send({ message: `there was an error creating card ${err.message}` })
-    
+
   }
 
 })
@@ -63,7 +66,7 @@ router.get('/cards/:card', (req, res) => {
 router.put('/cards/:card/update', (req, res) => {
   const id = req.params.card;
 
-  Card.findByIdAndUpdate(id, req.body, {new: true})
+  Card.findByIdAndUpdate(id, req.body, { new: true })
     .then(data => {
       if (!data) {
         res.status(400).send({ message: `cannot find the card with id ${id}` })
@@ -80,7 +83,7 @@ router.put('/cards/:card/update', (req, res) => {
 router.put('/cards/:card/set-stage', (req, res) => {
   const id = req.params.card;
 
-  Card.findByIdAndUpdate(id, req.body, {new: true})
+  Card.findByIdAndUpdate(id, req.body, { new: true })
     .then(data => {
       if (!data) {
         res.status(400).send({ message: `cannot find the card with id ${id}` })

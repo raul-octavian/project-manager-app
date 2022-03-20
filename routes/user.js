@@ -63,8 +63,6 @@ router.post('/login', async (req, res) => {
 
   if (!foundUser) {
     return res.status(400).json({ error: "email is wrong" })
-  } else {
-    console.log("user logged in")
   }
 
   //check for password

@@ -85,7 +85,6 @@ router.put('/:project/add-stage', (req, res) => {
   Project.findByIdAndUpdate(req.params.project, { $addToSet: { stages: req.body.name } }, { new: true })
     .then(data => {
       if (data) {
-        console.log(data);
         res.status(201).send(data);
       } else {
         res.status(400).send({ message: "something went wrong" });
