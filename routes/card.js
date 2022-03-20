@@ -19,13 +19,14 @@ router.post('/:user/:project/create-card', async (req, res) => {
     })
       .then(
         data => {
+          console.log(data)
           if (data) {
             const id = data[0].toObject()._id
             Project.updateOne({ _id: req.params.project }, { $push: { cards: `${id}` } }, { new: true })
               .then(project => {
 
                 if (project) {
-                  res.status(200).send(data)
+                  res.status(200).send(project)
                 } else {
                   res.status(400).send({ message: "there was an error retrieving project information or creating the card" })
                 }
