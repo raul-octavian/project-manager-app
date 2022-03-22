@@ -11,7 +11,7 @@ const { response } = require('express');
 
 //create card
 
-router.post('/:user/:project/create-card', async (req, res) => {
+router.post('/:project/create-card', async (req, res) => {
   try {
     Card.insertMany({
       card_name: req.body.card_name,
@@ -19,14 +19,13 @@ router.post('/:user/:project/create-card', async (req, res) => {
     })
       .then(
         data => {
-          console.log(data)
           if (data) {
             const id = data[0].toObject()._id
             Project.updateOne({ _id: req.params.project }, { $push: { cards: `${id}` } }, { new: true })
               .then(project => {
 
                 if (project) {
-                  res.status(200).send(project)
+                  res.status(200).send(data)
                 } else {
                   res.status(400).send({ message: "there was an error retrieving project information or creating the card" })
                 }

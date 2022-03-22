@@ -20,26 +20,9 @@ let TaskSchema = new Schema({
   status: {
     type: Boolean,
     default: false,
-  },
-  task_members: [
-    { type: Schema.Types.ObjectId, ref: 'User', autopopulate: true }
-  ],
-  task_start_Date: {
-    type: Date
-  },
-  task_due_Date: {
-    type: Date
-  },
-  task_allocated_Hours: {
-    type: Number
-  },
-  task_used_Hours: {
-    type: Number,
-    default: 0,
-    min: 0,
-  },
+  }
 },
-{
+  {
     timestamps: true
   })
 TaskSchema.plugin(autopopulate);
