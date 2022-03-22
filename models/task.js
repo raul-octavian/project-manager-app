@@ -10,11 +10,11 @@ const Schema = mongoose.Schema;
 let TaskSchema = new Schema({
 
 
-  task_name: {
+  taskName: {
     type: String,
     required: true,
   },
-  task_description: {
+  taskDescription: {
     type: String,
   },
   status: {

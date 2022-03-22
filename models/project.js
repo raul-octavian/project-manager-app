@@ -26,16 +26,16 @@ let ProjectSchema = new Schema({
   },
 
   timeSchedule: {
-    start_Date: {
+    startDate: {
       type: Date
     },
-    due_Date: {
+    dueDate: {
       type: Date
     },
-    allocated_Hours: {
+    allocatedHours: {
       type: Number
     },
-    used_Hours: {
+    usedHours: {
       type: Number,
       default: 0,
       min: 0,

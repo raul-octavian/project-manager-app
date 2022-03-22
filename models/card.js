@@ -9,7 +9,7 @@ const Schema = mongoose.Schema;
 let CardSchema = new Schema({
 
 
-  card_name: {
+  cardName: {
     type: String,
     required: true,
   },
@@ -18,7 +18,7 @@ let CardSchema = new Schema({
     type: String,
     default: "backlog"
   },
-  card_description: {
+  cardDescription: {
     type: String,
   },
   status: {
@@ -28,19 +28,19 @@ let CardSchema = new Schema({
   tasks: [
     { type: Schema.Types.ObjectId, ref: 'Task', autopopulate: true }
   ],
-  card_members: [
+  cardMembers: [
     { type: Schema.Types.ObjectId, ref: 'User', autopopulate: true }
   ],
-  card_start_Date: {
+  cardStartDate: {
     type: Date
   },
-  card_due_Date: {
+  cardDueDate: {
     type: Date
   },
-  card_allocated_Hours: {
+  cardAllocatedHours: {
     type: Number
   },
-  card_used_Hours: {
+  cardUsedHours: {
     type: Number,
     default: 0,
     min: 0,
