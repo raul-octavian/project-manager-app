@@ -22,7 +22,7 @@ let ProjectSchema = new Schema({
 
   stages: {
     type: [String],
-    'default': ["backlog", "To-do", "Doing", "Test", "Complete"]
+    'default': ["backlog", "todo", "active", "test", "complete"]
   },
 
   timeSchedule: {
