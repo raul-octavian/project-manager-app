@@ -12,14 +12,16 @@ const { response } = require('express');
 //create card
 
 router.post('/:project/create-card', async (req, res) => {
+  console.log('req', req)
   try {
     Card.insertMany({
-      card_name: req.body.card_name,
+      cardName: req.body.cardName,
       stage: req.body.stage
     })
       .then(
         data => {
           if (data) {
+            console.log('card data', data)
             const id = data[0].toObject()._id
             Project.updateOne({ _id: req.params.project }, { $push: { cards: `${id}` } }, { new: true })
               .then(project => {
