@@ -121,7 +121,7 @@ router.delete('/cards/:project/:card/delete', async (req, res) => {
         Project.findByIdAndUpdate(project_id, { $pull: { cards: card_id } }, { new: true })
           .then(data => {
             if (data?.cards.find(item => item == card_id)) {
-              res.status(400).send({ message: "cannot and update project " + project_id })
+              res.status(400).send({ message: "cannot delete card from project " + project_id })
             } else {
               res.status(201).send({ message: "card deleted from project" })
             }
@@ -154,7 +154,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
     };
     const userExistsOnProject = await Project.find({ _id: req.params.project, "members": userInfo.id });
 
-    const userExistsOnCard = await Card.find({ _id: req.params.card, "card_members": userInfo.id });
+    const userExistsOnCard = await Card.find({ _id: req.params.card, "cardMembers": userInfo.id });
 
     const cardMembers = [];
 
@@ -164,7 +164,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
       if (userExistsOnCard.length) {
         cardMembers = res.status(200).send({ message: "user is already a member on this card" })
       } else {
-        Card.updateOne({ _id: req.params.card }, { $addToSet: { card_members: userInfo.id } })
+        Card.updateOne({ _id: req.params.card }, { $addToSet: { cardMembers: userInfo.id } })
           .then(data => {
             if (data) {
               res.status(200).send({ message: "user added to card " + userInfo.id })
@@ -182,7 +182,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
         }).catch(err => {
           res.status(500).send({ message: `there was an error adding user ${err.message}` })
         }).then(
-          Card.updateOne({ _id: req.params.card }, { $addToSet: { card_members: userInfo.id } })
+          Card.updateOne({ _id: req.params.card }, { $addToSet: { cardMembers: userInfo.id } })
             .then(data => {
               if (data) {
                 res.status(200).send({ message: "user added to card and project" })
@@ -215,11 +215,11 @@ router.put('/:user/:project/:card/members/remove', async (req, res) => {
     if (!userInfo) {
       res.status(200).send({ message: `there is no user with ${req.body.email} email address in our database, the account might have been deleted` })
     };
-    const userExistsOnCard = await Card.find({ _id: req.params.card, "card_members": userInfo.id });
+    const userExistsOnCard = await Card.find({ _id: req.params.card, "cardMembers": userInfo.id });
 
     if (userExistsOnCard.length) {
       console.log("if passed");
-      Card.updateOne({ _id: req.params.card }, { $pull: { card_members: userInfo.id } })
+      Card.updateOne({ _id: req.params.card }, { $pull: { cardMembers: userInfo.id } })
         .then(data => {
           if (data) {
             console.log(data);

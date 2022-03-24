@@ -108,7 +108,7 @@ router.put('/:user/:project/:card/:task/members', async (req, res) => {
     };
     const userExistsOnProject = await Project.find({ _id: req.params.project, "members": userInfo.id });
 
-    const userExistsOnTask = await Task.find({ _id: req.params.task, "task_members": userInfo.id });
+    const userExistsOnTask = await Task.find({ _id: req.params.task, "taskMembers": userInfo.id });
 
     const taskMembers = [];
 
@@ -116,9 +116,9 @@ router.put('/:user/:project/:card/:task/members', async (req, res) => {
 
     if (userExistsOnProject.length) {
       if (userExistsOnTask.length) {
-        cardMembers = res.status(200).send({ message: "user is already a member on this card" })
+        cardMembers = res.status(200).send({ message: "user is already a member on this task" })
       } else {
-        Task.updateOne({ _id: req.params.task }, { $addToSet: { task_members: userInfo.id } })
+        Task.updateOne({ _id: req.params.task }, { $addToSet: { taskMembers: userInfo.id } })
           .then(data => {
             if (data) {
               res.status(200).send({ message: "user added to task " + userInfo.name })
@@ -136,7 +136,7 @@ router.put('/:user/:project/:card/:task/members', async (req, res) => {
         }).catch(err => {
           res.status(500).send({ message: `there was an error adding user ${err.message}` })
         }).then(
-          Task.updateOne({ _id: req.params.task }, { $addToSet: { task_members: userInfo.id } })
+          Task.updateOne({ _id: req.params.task }, { $addToSet: { taskMembers: userInfo.id } })
             .then(data => {
               if (data) {
                 res.status(200).send({ message: "user added to task and project" })
@@ -169,10 +169,10 @@ router.put('/:user/:project/:card/:task/members/remove', async (req, res) => {
     if (!userInfo) {
       res.status(200).send({ message: `there is no user with ${req.body.email} email address in our database, the account might have been deleted` })
     };
-    const userExistsOnCard = await Task.find({ _id: req.params.task, "task_members": userInfo.id });
+    const userExistsOnCard = await Task.find({ _id: req.params.task, "taskMembers": userInfo.id });
 
     if (userExistsOnCard.length) {
-      Task.updateOne({ _id: req.params.task }, { $pull: { task_members: userInfo.id } })
+      Task.updateOne({ _id: req.params.task }, { $pull: { taskMembers: userInfo.id } })
         .then(data => {
           if (data) {
             res.status(200).send({ message: "user removed from task member list" })
