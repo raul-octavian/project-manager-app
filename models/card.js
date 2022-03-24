@@ -1,4 +1,4 @@
-const { array } = require("joi");
+const { array, date } = require("joi");
 const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
 const autopopulate = require("mongoose-autopopulate")

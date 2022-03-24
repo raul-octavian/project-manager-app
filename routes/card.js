@@ -68,7 +68,7 @@ router.get('/cards/:card', (req, res) => {
 router.put('/cards/:card/update', (req, res) => {
   const id = req.params.card;
 
-  Card.findByIdAndUpdate(id, req.body, { new: true })
+  Card.findByIdAndUpdate(id, req.body, { new: true, upsert: true })
     .then(data => {
       if (!data) {
         res.status(400).send({ message: `cannot find the card with id ${id}` })
