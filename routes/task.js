@@ -11,6 +11,7 @@ const { response } = require('express');
 
 
 router.post('/:user/:project/:card/create-task', (req, res) => {
+  console.log('req', req.body)
   Task.insertMany(req.body)
     .then(
       data => {

@@ -151,6 +151,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
 
     if (!userInfo) {
       res.status(200).send({ message: `there is no user with ${req.body.email} email address in our database, if email is correct we will send him an join link.` })
+      return
     };
     const userExistsOnProject = await Project.find({ _id: req.params.project, "members": userInfo.id });
 
@@ -167,7 +168,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
         Card.updateOne({ _id: req.params.card }, { $addToSet: { cardMembers: userInfo.id } })
           .then(data => {
             if (data) {
-              res.status(200).send({ message: "user added to card " + userInfo.id })
+              res.status(200).send({ ...data, message: "user added to card " + userInfo.id })
             }
           }).catch(err => {
             res.status(500).send({ message: `there was an error adding user ${err.message}` })
@@ -177,7 +178,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
       Project.updateOne({ _id: req.params.project }, { $addToSet: { members: userInfo.id } })
         .then(data => {
           if (data) {
-            console.log(userInfo.id)
+
           }
         }).catch(err => {
           res.status(500).send({ message: `there was an error adding user ${err.message}` })
@@ -203,7 +204,6 @@ router.put('/:user/:project/:card/members', async (req, res) => {
 
 
 router.put('/:user/:project/:card/members/remove', async (req, res) => {
-
   try {
 
 
@@ -212,17 +212,18 @@ router.put('/:user/:project/:card/members/remove', async (req, res) => {
         res.status(500).send({ message: `there was an error finding user ${err.message}` })
       });
 
+
     if (!userInfo) {
       res.status(200).send({ message: `there is no user with ${req.body.email} email address in our database, the account might have been deleted` })
+      return
     };
     const userExistsOnCard = await Card.find({ _id: req.params.card, "cardMembers": userInfo.id });
 
     if (userExistsOnCard.length) {
-      console.log("if passed");
       Card.updateOne({ _id: req.params.card }, { $pull: { cardMembers: userInfo.id } })
         .then(data => {
           if (data) {
-            console.log(data);
+            console.log(data)
             res.status(200).send({ message: "user removed from card member list" })
           }
         }).catch(err => {
