@@ -12,11 +12,14 @@ const { response } = require('express');
 //create card
 
 router.post('/:project/create-card', async (req, res) => {
-  console.log('req', req)
+  let cardIndex = 0;
   try {
+
+    cardIndex = await Card.count();
     Card.insertMany({
       cardName: req.body.cardName,
-      stage: req.body.stage
+      stage: req.body.stage,
+      index: cardIndex
     })
       .then(
         data => {
@@ -168,7 +171,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
         Card.updateOne({ _id: req.params.card }, { $addToSet: { cardMembers: userInfo.id } })
           .then(data => {
             if (data) {
-              res.status(200).send({ ...data, message: "user added to card " + userInfo.id })
+              res.status(200).send({ message: "user added to card " + userInfo.id })
             }
           }).catch(err => {
             res.status(500).send({ message: `there was an error adding user ${err.message}` })

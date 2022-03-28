@@ -32,9 +32,9 @@ router.get('/:user/all', (req, res) => {
             id: item._id,
             description: item.description,
             due_date: item.timeSchedule.due_Date,
-            available_hours: item.timeSchedule.allocated_Hours - item.timeSchedule.used_Hours,
-            percentUsed: -item.timeSchedule.used_Hours / -item.timeSchedule.allocated_Hours * 100 + '%',
-            percentAvailable: 100 - (-item.timeSchedule.used_Hours / -item.timeSchedule.allocated_Hours * 100) + '%'
+            // available_hours: item.timeSchedule.allocated_Hours - item.timeSchedule.used_Hours,
+            // percentUsed: timeSchedule.allocated_Hours ? -item.timeSchedule.used_Hours / -item.timeSchedule.allocated_Hours * 100 + '%' : '',
+            // percentAvailable:  100 - (-item.timeSchedule.used_Hours / -item.timeSchedule.allocated_Hours * 100) + '%'
 
           }
         })
@@ -103,7 +103,7 @@ router.put('/:project/remove-stage', async (req, res) => {
     const project = await Project.findById(req.params.project);
     const cards = await project?.cards;
     const cardsOnStage = await cards.map(el => el.stage == req.body.name);
-    console.log("cards on stage", cardsOnStage);
+
 
     if (cardsOnStage.length) {
       res.status(200).send({ message: "you have cards registers on this stage, remove them and then retry" })

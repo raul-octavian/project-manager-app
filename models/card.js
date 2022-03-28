@@ -13,6 +13,9 @@ let CardSchema = new Schema({
     type: String,
     required: true,
   },
+  index: {
+    type: Number
+  },
 
   stage: {
     type: String,
@@ -29,7 +32,10 @@ let CardSchema = new Schema({
     { type: Schema.Types.ObjectId, ref: 'Task', autopopulate: true }
   ],
   cardMembers: [
-    { type: Schema.Types.ObjectId, ref: 'User', autopopulate: true }
+    {
+      type: Schema.Types.ObjectId, ref: 'User',
+      autopopulate: { select: ['name', 'email', 'username'] }
+    }
   ],
   cardStartDate: {
     type: Date

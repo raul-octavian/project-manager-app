@@ -1,4 +1,4 @@
-const { array } = require("joi");
+const { array, date } = require("joi");
 const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
 const autopopulate = require("mongoose-autopopulate")
@@ -27,13 +27,16 @@ let ProjectSchema = new Schema({
 
   timeSchedule: {
     startDate: {
-      type: Date
+      type: Date,
+      default: Date.now()
     },
     dueDate: {
       type: Date
     },
     allocatedHours: {
-      type: Number
+      type: Number,
+      default: 0,
+      min: 0
     },
     usedHours: {
       type: Number,
@@ -42,7 +45,13 @@ let ProjectSchema = new Schema({
     }
   },
   members: [
-    { type: Schema.Types.ObjectId, ref: 'User', autopopulate: true }
+    {
+      type: Schema.Types.ObjectId, ref: 'User',
+      autopopulate: { select: ['name', 'email', 'username'] }
+      // autopopulate: { select: 'email' },
+      // autopopulate: { select: 'username' },
+      // autopopulate: { select: '_id' }
+    }
   ],
   cards: [
     { type: Schema.Types.ObjectId, ref: 'Card', autopopulate: true }
