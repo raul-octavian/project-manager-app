@@ -150,6 +150,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
     userInfo = await User.findOne({ email: req.body.email })
       .catch(err => {
         res.status(500).send({ message: `there was an error adding user ${err.message}` })
+        return
       });
 
     if (!userInfo) {
@@ -171,7 +172,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
         Card.updateOne({ _id: req.params.card }, { $addToSet: { cardMembers: userInfo.id } })
           .then(data => {
             if (data) {
-              res.status(200).send({ message: "user added to card " + userInfo.id })
+              res.status(200).send({ message: "user added to card" })
             }
           }).catch(err => {
             res.status(500).send({ message: `there was an error adding user ${err.message}` })

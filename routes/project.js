@@ -27,14 +27,15 @@ router.get('/:user/all', (req, res) => {
     .then(data => {
       if (data) {
         projectNames = data.map((item) => {
+
           return {
             name: item.name,
             id: item._id,
             description: item.description,
-            due_date: item.timeSchedule.due_Date,
-            // available_hours: item.timeSchedule.allocated_Hours - item.timeSchedule.used_Hours,
-            // percentUsed: timeSchedule.allocated_Hours ? -item.timeSchedule.used_Hours / -item.timeSchedule.allocated_Hours * 100 + '%' : '',
-            // percentAvailable:  100 - (-item.timeSchedule.used_Hours / -item.timeSchedule.allocated_Hours * 100) + '%'
+            dueDate: item.timeSchedule.dueDate || "",
+            availableHours: item.timeSchedule.allocatedHours - item.timeSchedule.usedHours || 0,
+            percentUsed: item.timeSchedule.allocatedHours ? item.timeSchedule.usedHours / item.timeSchedule.allocatedHours * 100 + '%' : '0%',
+            percentAvailable: item.timeSchedule.allocatedHours ? 100 - (-item.timeSchedule.usedHours / -item.timeSchedule.allocatedHours * 100) + '%' : ""
 
           }
         })
@@ -82,7 +83,7 @@ router.get('/:user/owned', (req, res) => {
 
 router.put('/:project/add-stage', (req, res) => {
 
-  Project.findByIdAndUpdate(req.params.project, { $addToSet: { stages: req.body.name } }, { new: true })
+  Project.findByIdAndUpdate(req.params.project, { $addToSet: { stages: req.body.name } }, { new: true, upsert: true })
     .then(data => {
       if (data) {
         res.status(201).send(data);
@@ -97,16 +98,20 @@ router.put('/:project/add-stage', (req, res) => {
 //remove stage
 
 router.put('/:project/remove-stage', async (req, res) => {
+  console.log(req.params.project)
+  console.log(req.body.name)
 
   try {
 
     const project = await Project.findById(req.params.project);
     const cards = await project?.cards;
-    const cardsOnStage = await cards.map(el => el.stage == req.body.name);
+    const cardsOnStage = await cards.find(el => el.stage == req.body.name);
+    console.log(cardsOnStage)
 
 
-    if (cardsOnStage.length) {
+    if (cardsOnStage) {
       res.status(200).send({ message: "you have cards registers on this stage, remove them and then retry" })
+      return
 
     } else {
 
@@ -151,11 +156,13 @@ router.put('/:user/:project/members', async (req, res) => {
 
   userInfo = await User.findOne({ email: req.body.email })
     .catch(err => {
-      res.status(500).send({ message: `there was an error adding user ${err.message}` })
+      res.status(500).send({ message: `user does not exist in our database` })
+      return
     });
 
   if (!userInfo) {
     res.status(200).send({ message: `there is no user with ${req.body.email} email address in our database, if email is correct we will send him an join link.` })
+    return
   };
   userExistsOnProject = await Project.find({ _id: req.params.project, "members": userInfo.id });
 
@@ -164,8 +171,10 @@ router.put('/:user/:project/members', async (req, res) => {
   } else {
     Project.updateOne({ _id: req.params.project }, { $addToSet: { members: userInfo.id } })
       .then(data => {
-        if (data) {
-          res.status(200).send({ message: userInfo.id })
+        if (data && !userInfo) {
+          res.status(200).send({ message: 'there is no user with ${req.body.email} email address in our database, if email is correct we will send him an join link.' })
+        } else if (data) {
+          res.status(200).send({ message: 'user added to the team' })
         }
       }).catch(err => {
         res.status(500).send({ message: `there was an error adding user ${err.message}` })
@@ -177,20 +186,33 @@ router.put('/:user/:project/members', async (req, res) => {
 
 router.put('/:user/:project/members/remove', async (req, res) => {
 
-  userInfo = await User.findOne({ email: req.body.email })
+  const userInfo = await User.findOne({ email: req.body.email })
     .catch(err => {
       res.status(500).send({ message: `there was an error finding user ${err.message}` })
     });
 
   if (!userInfo) {
     res.status(200).send({ message: `there is no user with ${req.body.email} email address in our database, the account might have been deleted` })
+    return
   };
-  userExistsOnProject = await Project.find({ _id: req.params.project, "members": userInfo.id });
+  const userExistsOnProject = await Project.find({ _id: req.params.project, "members": userInfo.id });
+
+  if (userExistsOnProject[0].owner == userInfo.id) {
+    res.status(200).send({ message: 'Project owner can not be deleted from member list' })
+    return
+  }
+
+  const userExistsOnCard = await Card.find({ "cardMembers": userInfo.id });
+
+  if (userExistsOnCard.length) {
+    res.status(200).send({ message: 'User is assigned to card and can not be removed from project team' })
+    return
+  }
 
   if (userExistsOnProject.length) {
     Project.findOneAndUpdate({ _id: req.params.project, "members": userInfo.id }, { $pull: { members: userInfo.id } }, { new: true })
       .then(project =>
-        res.status(201).send(project))
+        res.status(201).send({ message: "user removed from the project" }))
       .catch(err => {
         res.status(500).send({ message: `there was an error removing user ${err.message}` })
       })

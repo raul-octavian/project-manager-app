@@ -52,7 +52,7 @@ app.get('/api/user', (req, res) => {
 //use routes
 
 app.use('/api/user', userRoute)
-app.use('/api/projects', projectRoute)
+app.use('/api/projects', verifyToken, projectRoute)
 app.use('/api/projects', verifyToken, cardRoute)
 app.use('/api/projects', verifyToken, taskRoute)
 // app.use('/api/projects/', verifyToken, stageRoute)
