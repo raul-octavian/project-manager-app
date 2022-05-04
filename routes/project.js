@@ -110,7 +110,7 @@ router.put('/:project/remove-stage', async (req, res) => {
 
 
     if (cardsOnStage) {
-      res.status(200).send({ message: "you have cards registers on this stage, remove them and then retry" })
+      res.status(200).send({ error: "you have cards registers on this stage, remove them and then retry" })
       return
 
     } else {
