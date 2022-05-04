@@ -16,7 +16,7 @@ router.post('/:user/create', (req, res) => {
     .then(data => {
       res.status(200).send(data);
     }).catch(err => {
-      res.status(500).send({ message: err.message })
+      res.status(500).send({ error: err.message })
     })
 });
 
@@ -41,10 +41,10 @@ router.get('/:user/all', (req, res) => {
         })
         res.status(200).send(projectNames);
       } else {
-        res.status(400).send({ message: "there are no result found" })
+        res.status(400).send({ error: "there are no result found" })
       }
     }).catch(err => {
-      res.status(500).send({ message: err.message })
+      res.status(500).send({ error: err.message })
     })
 });
 
@@ -61,7 +61,7 @@ router.get('/:project', (req, res) => {
         res.status(200).send({ message: "The search found no result, the project might have been deleted, make sure the project id " + req.params.project + " is correct" })
       }
     }).catch(err => {
-      res.status(500).send({ message: `there was an error ${err.message}` });
+      res.status(500).send({ error: `there was an error ${err.message}` });
     })
 })
 //get project where user is owner
@@ -72,10 +72,10 @@ router.get('/:user/owned', (req, res) => {
       if (data) {
         res.status(200).send(data);
       } else {
-        res.status(400).send({ message: "there are no result found" })
+        res.status(400).send({ error: "there are no result found" })
       }
     }).catch(err => {
-      res.status(500).send({ message: err.message })
+      res.status(500).send({ error: err.message })
     })
 });
 
@@ -88,10 +88,10 @@ router.put('/:project/add-stage', (req, res) => {
       if (data) {
         res.status(201).send(data);
       } else {
-        res.status(400).send({ message: "something went wrong" });
+        res.status(400).send({ error: "something went wrong" });
       }
     }).catch(err => {
-      res.status(500).send({ message: `error updating project with id ${req.params.project},  ${err.message}` })
+      res.status(500).send({ error: `error updating project with id ${req.params.project},  ${err.message}` })
     })
 })
 
@@ -120,15 +120,15 @@ router.put('/:project/remove-stage', async (req, res) => {
           if (data) {
             res.status(201).send(data);
           } else {
-            res.status(400).send({ message: "something went wrong" });
+            res.status(400).send({ error: "something went wrong" });
           }
         }).catch(err => {
-          res.status(500).send({ message: `error removing project with id ${req.params.project},  ${err.message}` })
+          res.status(500).send({ error: `error removing project with id ${req.params.project},  ${err.message}` })
         })
     }
 
   } catch (err) {
-    res.status(500).send({ message: "delete aborted " + err.message })
+    res.status(500).send({ error: "delete aborted " + err.message })
   }
 
 })
@@ -141,12 +141,12 @@ router.put('/:user/:project', (req, res) => {
   Project.findByIdAndUpdate(project_id, req.body)
     .then(data => {
       if (!data) {
-        res.status(400).send({ message: `cannot find the project with id ${project_id}` })
+        res.status(400).send({ error: `cannot find the project with id ${project_id}` })
       } else {
         res.status(201).send({ message: "project updated successfully" })
       }
     }).catch(err => {
-      res.status(500).send({ message: `error updating project with id ${project_id},  ${err.message}` })
+      res.status(500).send({ error: `error updating project with id ${project_id},  ${err.message}` })
     })
 });
 
@@ -156,7 +156,7 @@ router.put('/:user/:project/members', async (req, res) => {
 
   userInfo = await User.findOne({ email: req.body.email })
     .catch(err => {
-      res.status(500).send({ message: `user does not exist in our database` })
+      res.status(500).send({ error: `user does not exist in our database` })
       return
     });
 
@@ -177,7 +177,7 @@ router.put('/:user/:project/members', async (req, res) => {
           res.status(200).send({ message: 'user added to the team' })
         }
       }).catch(err => {
-        res.status(500).send({ message: `there was an error adding user ${err.message}` })
+        res.status(500).send({ error: `there was an error adding user ${err.message}` })
       })
   }
 });
@@ -188,7 +188,7 @@ router.put('/:user/:project/members/remove', async (req, res) => {
 
   const userInfo = await User.findOne({ email: req.body.email })
     .catch(err => {
-      res.status(500).send({ message: `there was an error finding user ${err.message}` })
+      res.status(500).send({ error: `there was an error finding user ${err.message}` })
     });
 
   if (!userInfo) {
@@ -214,7 +214,7 @@ router.put('/:user/:project/members/remove', async (req, res) => {
       .then(project =>
         res.status(201).send({ message: "user removed from the project" }))
       .catch(err => {
-        res.status(500).send({ message: `there was an error removing user ${err.message}` })
+        res.status(500).send({ error: `there was an error removing user ${err.message}` })
       })
   }
 })
@@ -249,13 +249,13 @@ router.delete('/:project/delete', async (req, res) => {
       if (response) {
         res.status(201).send({ message: "project deleted" })
       } else {
-        res.status(400).send({ message: "the project could not be found, it may have been deleted, refresh the page and try again" })
+        res.status(400).send({ error: "the project could not be found, it may have been deleted, refresh the page and try again" })
       }
     }).catch(err => {
-      res.status(500).send({ message: "error deleting the card with id: " + card_id + "error: " + err.message })
+      res.status(500).send({ error: "error deleting the card with id: " + card_id + "error: " + err.message })
     })
   } catch (err) {
-    res.status(500).send({ message: "delete aborted " + err.message })
+    res.status(500).send({ error: "delete aborted " + err.message })
   }
 
 })

@@ -32,16 +32,16 @@ router.post('/:project/create-card', async (req, res) => {
                 if (project) {
                   res.status(200).send(data)
                 } else {
-                  res.status(400).send({ message: "there was an error retrieving project information or creating the card" })
+                  res.status(400).send({ error: "there was an error retrieving project information or creating the card" })
                 }
               })
           }
         }).catch(err => {
-          res.status(500).send({ message: `there was an error creating card ${err.message}` })
+          res.status(500).send({ error: `there was an error creating card ${err.message}` })
         })
 
   } catch (err) {
-    res.status(500).send({ message: `there was an error creating card ${err.message}` })
+    res.status(500).send({ error: `there was an error creating card ${err.message}` })
 
   }
 
@@ -62,7 +62,7 @@ router.get('/cards/:card', (req, res) => {
         res.status(200).send({ message: "search found no results" })
       }
     }).catch(err => {
-      res.status(500).send({ message: "there was an error" + err.message })
+      res.status(500).send({ error: "there was an error" + err.message })
     })
 })
 
@@ -74,12 +74,12 @@ router.put('/cards/:card/update', (req, res) => {
   Card.findByIdAndUpdate(id, req.body, { new: true, upsert: true })
     .then(data => {
       if (!data) {
-        res.status(400).send({ message: `cannot find the card with id ${id}` })
+        res.status(400).send({ error: `cannot find the card with id ${id}` })
       } else {
         res.status(201).send(data)
       }
     }).catch(err => {
-      res.status(500).send({ message: `error updating card with id ${id},  ${err.message}` })
+      res.status(500).send({ error: `error updating card with id ${id},  ${err.message}` })
     })
 })
 
@@ -91,12 +91,12 @@ router.put('/cards/:card/set-stage', (req, res) => {
   Card.findByIdAndUpdate(id, req.body, { new: true })
     .then(data => {
       if (!data) {
-        res.status(400).send({ message: `cannot find the card with id ${id}` })
+        res.status(400).send({ error: `cannot find the card with id ${id}` })
       } else {
         res.status(201).send(data)
       }
     }).catch(err => {
-      res.status(500).send({ message: `error updating card with id ${id},  ${err.message}` })
+      res.status(500).send({ error: `error updating card with id ${id},  ${err.message}` })
     })
 })
 
@@ -124,20 +124,20 @@ router.delete('/cards/:project/:card/delete', async (req, res) => {
         Project.findByIdAndUpdate(project_id, { $pull: { cards: card_id } }, { new: true })
           .then(data => {
             if (data?.cards.find(item => item == card_id)) {
-              res.status(400).send({ message: "cannot delete card from project " + project_id })
+              res.status(400).send({ error: "cannot delete card from project " + project_id })
             } else {
               res.status(201).send({ message: "card deleted from project" })
             }
           })
       } else {
-        res.status(400).send({ message: "the card could not be found, it may have been deleted, refresh the page and try again" })
+        res.status(400).send({ error: "the card could not be found, it may have been deleted, refresh the page and try again" })
       }
     }).catch(err => {
-      res.status(500).send({ message: "error deleting the card with id: " + card_id + "error: " + err.message })
+      res.status(500).send({ error: "error deleting the card with id: " + card_id + "error: " + err.message })
     })
 
   } catch (err) {
-    res.status(500).send({ message: "there was an error deleting the card " + err.message })
+    res.status(500).send({ error: "there was an error deleting the card " + err.message })
   }
 });
 
@@ -149,7 +149,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
 
     userInfo = await User.findOne({ email: req.body.email })
       .catch(err => {
-        res.status(500).send({ message: `there was an error adding user ${err.message}` })
+        res.status(500).send({ error: `there was an error adding user ${err.message}` })
         return
       });
 
@@ -175,7 +175,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
               res.status(200).send({ message: "user added to card" })
             }
           }).catch(err => {
-            res.status(500).send({ message: `there was an error adding user ${err.message}` })
+            res.status(500).send({ error: `there was an error adding user ${err.message}` })
           })
       }
     } else {
@@ -185,7 +185,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
 
           }
         }).catch(err => {
-          res.status(500).send({ message: `there was an error adding user ${err.message}` })
+          res.status(500).send({ error: `there was an error adding user ${err.message}` })
         }).then(
           Card.updateOne({ _id: req.params.card }, { $addToSet: { cardMembers: userInfo.id } })
             .then(data => {
@@ -193,12 +193,12 @@ router.put('/:user/:project/:card/members', async (req, res) => {
                 res.status(200).send({ message: "user added to card and project" })
               }
             }).catch(err => {
-              res.status(500).send({ message: `there was an error adding user ${err.message}` })
+              res.status(500).send({ error: `there was an error adding user ${err.message}` })
             })
         )
     }
   } catch (err) {
-    res.status(500).send({ message: "err.message" })
+    res.status(500).send({ error: "err.message" })
   }
 
 
@@ -213,7 +213,7 @@ router.put('/:user/:project/:card/members/remove', async (req, res) => {
 
     userInfo = await User.findOne({ email: req.body.email })
       .catch(err => {
-        res.status(500).send({ message: `there was an error finding user ${err.message}` })
+        res.status(500).send({ error: `there was an error finding user ${err.message}` })
       });
 
 
@@ -231,13 +231,13 @@ router.put('/:user/:project/:card/members/remove', async (req, res) => {
             res.status(200).send({ message: "user removed from card member list" })
           }
         }).catch(err => {
-          res.status(500).send({ message: `there was an error adding user ${err.message}` })
+          res.status(500).send({ error: `there was an error adding user ${err.message}` })
         })
     } else {
-      res.status(400).send({ message: "user is not on the card members list" })
+      res.status(400).send({ error: "user is not on the card members list" })
     }
   } catch (err) {
-    res.status(500).send({ message: "err.message" })
+    res.status(500).send({ error: "err.message" })
   }
 
 

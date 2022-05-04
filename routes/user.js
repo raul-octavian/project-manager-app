@@ -125,13 +125,13 @@ router.put("/:user/update", verifyToken, async (req, res) => {
   User.findByIdAndUpdate(req.params.user, req.body)
     .then(data => {
       if (!data) {
-        res.status(400).send({ message: "cannot find user with id " + id })
+        res.status(400).send({ error: "cannot find user with id " + id })
       } else {
         res.status(201).send(data)
       }
     })
     .catch(err => {
-      res.status(500).send({ message: "error updating the toto with id: " + id })
+      res.status(500).send({ error: "error updating the toto with id: " + id })
     })
 })
 
