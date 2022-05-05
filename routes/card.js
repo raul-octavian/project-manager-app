@@ -186,6 +186,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
           }
         }).catch(err => {
           res.status(500).send({ error: `there was an error adding user ${err.message}` })
+          return
         }).then(
           Card.updateOne({ _id: req.params.card }, { $addToSet: { cardMembers: userInfo.id } })
             .then(data => {
@@ -194,6 +195,7 @@ router.put('/:user/:project/:card/members', async (req, res) => {
               }
             }).catch(err => {
               res.status(500).send({ error: `there was an error adding user ${err.message}` })
+              return
             })
         )
     }
