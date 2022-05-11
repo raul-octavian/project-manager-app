@@ -33,10 +33,8 @@ router.get('/:user/all', (req, res) => {
             id: item._id,
             description: item.description,
             dueDate: item.timeSchedule.dueDate || "",
-            availableHours: item.timeSchedule.allocatedHours - item.timeSchedule.usedHours || 0,
-            percentUsed: item.timeSchedule.allocatedHours ? item.timeSchedule.usedHours / item.timeSchedule.allocatedHours * 100 + '%' : '0%',
-            percentAvailable: item.timeSchedule.allocatedHours ? 100 - (-item.timeSchedule.usedHours / -item.timeSchedule.allocatedHours * 100) + '%' : ""
-
+            availableHours: (item.timeSchedule.allocatedHours - item.timeSchedule.usedHours).toFixed(2) || 0,
+            usedHours: item.timeSchedule.usedHours
           }
         })
         res.status(200).send(projectNames);

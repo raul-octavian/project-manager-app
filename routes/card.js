@@ -7,6 +7,7 @@ const User = require('../models/user');
 const { route } = require('./user');
 const { verifyToken } = require('../validate');
 const { response } = require('express');
+const { findOneAndUpdate } = require('../models/project');
 
 
 //create card
@@ -68,8 +69,11 @@ router.get('/cards/:card', (req, res) => {
 
 //update
 
-router.put('/cards/:card/update', (req, res) => {
+router.put('/:project/cards/:card/update', (req, res) => {
   const id = req.params.card;
+  const projectId = req.params.project
+  const card = req?.body?.cardUsedHours
+
 
   Card.findByIdAndUpdate(id, req.body, { new: true, upsert: true })
     .then(data => {
@@ -77,8 +81,11 @@ router.put('/cards/:card/update', (req, res) => {
         res.status(400).send({ error: `cannot find the card with id ${id}` })
       } else {
         res.status(201).send(data)
+        console.log(data)
       }
-    }).catch(err => {
+    }).then(
+      setUsedHoursOnProject(card, projectId)
+    ).catch(err => {
       res.status(500).send({ error: `error updating card with id ${id},  ${err.message}` })
     })
 })
@@ -242,7 +249,25 @@ router.put('/:user/:project/:card/members/remove', async (req, res) => {
     res.status(500).send({ error: "err.message" })
   }
 
-
 })
+
+const setUsedHoursOnProject = async (card, projectId) => {
+  if (card) {
+    const project = await Project.findById(projectId);
+    const cards = project.cards
+    cards.map(item => {
+      console.log(item.cardUsedHours)
+    })
+    let allUsedHours = 0;
+    cards.forEach((item) => {
+      allUsedHours += item.cardUsedHours
+    })
+    allUsedHours.toFixed(2)
+    project.timeSchedule.usedHours = allUsedHours
+    Project.findByIdAndUpdate(projectId, project, { new: true }).then(data => {
+      console.log(data.timeSchedule)
+    })
+  }
+}
 
 module.exports = router;

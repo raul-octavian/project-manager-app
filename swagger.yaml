@@ -1,0 +1,1243 @@
+openapi: 3.0.0
+info: 
+  title: Project Management App
+  description: Project management app, trello inspired and following kanban ideology
+  version: 1.0.0
+
+servers: 
+
+  - url: https://roa-management-api.herokuapp.com/api
+    description: development version - and updated
+
+  - url: http://Localhost:4000/api
+    description: Localhost development server
+
+components: 
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: auth-token
+  
+  schemas:
+    User:
+      type: object
+      properties: 
+        _id: 
+          type: string
+        name: 
+          type: string
+        email: 
+          type: string
+          format: email
+        password: 
+          type: string
+          format: password
+        username: 
+          type: string
+    Project:
+      type: object
+      properties: 
+        _id: 
+          type: string
+          format: uuid
+        name: 
+          type: string
+        description: 
+          type: string
+        owner: 
+          type: string
+          format: uuid
+        isComplete: 
+          type: boolean
+          default: false
+        allowsManualHoursInput:
+          type: boolean
+        stages: 
+          type: array
+          default: ["backlog", "todo", "active", "test", "complete"]
+          items:
+            type: string
+        timeSchedule:
+          type: object
+          properties:
+            startDate:
+              type: string
+              format: date-time
+            dueDate:
+              type: string
+              format: date-time
+            allocatedHours:
+              type: number
+            usedHours:
+              type: number
+        members: 
+          type: array
+          items:
+            type: string
+            format: uuid
+        cards: 
+          type: array
+          items:
+            type: string
+            format: uuid
+              
+    Card:
+      type: object
+      properties: 
+        _id: 
+          type: string
+          format: uuid
+        cardName: 
+          type: string
+        cardDescription: 
+          type: string
+        index: 
+          type: integer
+        status: 
+          type: boolean
+          default: false
+        isComplete: 
+          type: boolean
+          default: false
+        allowsManualHoursInput:
+          type: boolean
+        stage: 
+          type: string
+        cardStartDate:
+          type: string
+          format: date-time
+        cardDueDate:
+          type: string
+          format: date-time
+        cardAllocatedHours:
+          type: number
+        cardUsedHours:
+          type: number
+        cardMembers: 
+          type: array
+          items:
+            type: string
+            format: uuid
+        tasks: 
+          type: array
+          items:
+            type: string
+            format: uuid
+    Task:
+      type: object
+      properties: 
+        _id: 
+          type: string
+          format: uuid
+        taskName: 
+          type: string
+        taskDescription: 
+          type: string
+        status: 
+          type: boolean
+          default: false
+  responses: 
+    500: 
+      description: error message
+      content: 
+        application/json:
+          schema:
+            type: object
+            properties:
+                message:
+                  type: string
+
+    400-error:
+      description: Fields are incomplete or did not pass the verifications, or url has bad format
+      content: 
+        application/json:
+          schema:
+            type: object
+            properties:
+                error:
+                  type: string
+
+    401: 
+      description: Access denied
+      content: 
+        application/json:
+          schema:
+            type: object
+            properties:
+                message:
+                  type: string
+
+paths:
+
+  /user/register:
+    post:
+      summary: Register a new user
+      description: Register a new user in the database
+      requestBody:
+        required: true
+        content: 
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+
+      responses: 
+        200: 
+          description: User created successfully
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: 
+                    type: string
+                  data:
+                    type: string
+        400: 
+          $ref: '#/components/responses/400-error'
+
+      
+        500:
+          $ref: '#/components/responses/500'
+
+  /user/login:
+    post:
+      summary: Login user
+      description: Login user and get the JWT token to authenticate, use to populate auth-token field in header
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: 
+                  type: string
+                  default: johnyOne@test.com
+                password: 
+                  type: string
+                  default: '1234567890'
+      responses: 
+        200:
+          description: User logged in successfully
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email: 
+                    type: string
+                  data: 
+                    type: object
+                      user_id: 
+                        type: string
+                        token: string
+        400: 
+          $ref: '#/components/responses/400-error'
+
+        500:
+          $ref: '#/components/responses/500'
+
+  /user/{user}/update:
+    put:
+      summary: update user details
+      description: update user details
+
+      security: 
+        - ApiKeyAuth: []
+
+      parameters:
+        - in: path
+          name: user
+          required: true
+          description: mongoDB user ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#components/schemas/User"
+
+      responses:
+        201:
+          description: updated successfully
+          content: 
+            application/json:
+              schema:
+                $ref: "#components/schemas/User"
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500:
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /user/{user}:
+    get:
+      summary: get user information
+      description: get full user information from db
+
+      security: 
+        - ApiKeyAuth: []
+
+      parameters:
+        - in: path
+          name: user
+          required: true
+          description: mongoDB user ID
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: data fetched successfully
+          content: 
+            application/json:
+              schema:
+                type: object
+                $ref: "#components/schemas/User"
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /projects/{user}/create:
+    post:
+      summary: create new project
+      description: create a new project where user is owner 
+
+      security: 
+        - ApiKeyAuth: []
+      
+      parameters:
+        - in: path
+          name: user
+          required: true
+          description: mongoDB user ID
+          schema:
+            type: string
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#components/schemas/Project"
+
+      responses: 
+        200:
+          description: project created successfully
+          content: 
+            application/json:
+              schema:
+                type: object
+                $ref: "#components/schemas/Project"
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /projects/{user}/all: 
+    get:
+      summary: get all project
+      description: get all projects where user is member
+
+      security: 
+        - ApiKeyAuth: []
+      
+      parameters:
+        - in: path
+          name: user
+          required: true
+          description: mongoDB user ID
+          schema:
+            type: string
+      responses: 
+        200:
+          description: projects fetched successfully
+          content: 
+            application/json:
+              schema:
+                type: array
+                items: 
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name: 
+                      type: string
+                    description: 
+                      type: string
+                    dueDate: 
+                      type: string
+                    availableHours: 
+                      type: number
+                    userHours:
+                      type: number
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+  
+  /projects/{project}:
+    get:
+      summary: get one project
+      description: get one project by id
+
+      security: 
+        - ApiKeyAuth: []
+      
+      parameters:
+        - in: path
+          name: project
+          required: true
+          description: mongoDB project ID
+          schema:
+            type: string
+
+      responses: 
+        200:
+          description: project created successfully
+          content: 
+            application/json:
+              schema:
+                type: object
+                $ref: "#components/schemas/Project"
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+  
+  /projects/{user}/owned:
+    get:
+      summary: get all owned project
+      description: get all projects where user is owner
+
+      security: 
+        - ApiKeyAuth: []
+      
+      parameters:
+        - in: path
+          name: user
+          required: true
+          description: mongoDB user ID
+          schema:
+            type: string
+      
+      responses: 
+        200:
+          description: projects fetched successfully
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  $ref: "#components/schemas/Project"
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+  
+  /projects/{project}/add-stage:
+    put:
+      summary: add a new stage name to the stages array
+      description: add a new stage name to the stages array
+      security: 
+        - ApiKeyAuth: []
+      
+      parameters:
+        - in: path
+          name: project
+          required: true
+          description: mongoDB project ID
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: 
+                name: 
+                  type: string
+
+      responses:
+        201:
+          description: project updated successfully
+          content: 
+            application/json:
+              schema:
+                type: object
+                $ref: "#components/schemas/Project"
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /projects/{project}/remove-stage:
+    put:
+      summary: remove a stage name from the stages array
+      description: remove a stage name from the stages array
+      security: 
+        - ApiKeyAuth: []
+      
+      parameters:
+        - in: path
+          name: project
+          required: true
+          description: mongoDB project ID
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: 
+                name: 
+                  type: string
+
+      responses:
+
+        200: 
+          description: return an error message if there are cards on that stage
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  error: 
+                    type: string
+
+        201:
+          description: project updated successfully
+          content: 
+            application/json:
+              schema:
+                type: object
+                $ref: "#components/schemas/Project"
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /projects/{user}/{project}:
+    put: 
+      summary: update project
+      description: update project with passed in data where user is member, data can one or more properties
+      security: 
+        - ApiKeyAuth: []
+      
+      parameters:
+        - in: path
+          name: project
+          required: true
+          description: mongoDB project ID
+          schema:
+            type: string
+
+        - in: path
+          name: user
+          required: true
+          description: mongoDB user ID
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#components/schemas/Project"
+      
+      responses:
+        201:
+          description: project updated successfully
+          content: 
+            application/json:
+              schema:
+                type: object
+                $ref: "#components/schemas/Project"
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /projects/{user}/{project}/members:
+    put:
+      summary: add member to project
+      description: add one member to the project members array, if the email exist in the database and is not set already on the project
+      security: 
+        - ApiKeyAuth: []
+      
+      parameters:
+        - in: path
+          name: project
+          required: true
+          description: mongoDB project ID
+          schema:
+            type: string
+        
+        - in: path
+          name: user
+          required: true
+          description: mongoDB user ID
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: 
+                email: 
+                  type: string
+
+      responses:
+        200:
+          description: can inform that the user is not a member of the app, that the user is already a member on the project or that the user was successfully added to the members list
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+      
+  /projects/{user}/{project}/members/remove:
+    put:
+      summary: remove member from project
+      description: removes a user from the members list, if its not a member on a cards
+      security: 
+        - ApiKeyAuth: []
+      
+      parameters:
+        - in: path
+          name: project
+          required: true
+          description: mongoDB project ID
+          schema:
+            type: string
+        
+        - in: path
+          name: user
+          required: true
+          description: mongoDB user ID
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: 
+                email: 
+                  type: string
+
+      responses:
+        200:
+          description: can inform that the user is not a member of the app, that the user is a member on a card and cant be deleted or that the user was successfully deleted from the members list
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                   message:
+                    type: string
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /projects/{project}/delete:
+    delete:
+      summary: delete project
+      description: removes the project and all its nested cards and tasks
+      security: 
+        - ApiKeyAuth: []
+      
+      parameters:
+        - in: path
+          name: project
+          required: true
+          description: mongoDB project ID
+          schema:
+            type: string
+
+      responses:
+        201:
+          description: successful deletion
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /projects/{project}/create-card:
+    post:
+      summary: create a card
+      description: create a cards with given name, stage
+      security: 
+        - ApiKeyAuth: []
+
+      parameters:
+        - in: path
+          name: project
+          required: true
+          description: mongoDB project ID
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: 
+                cardName: 
+                  type: string
+                stage:
+                  type: string
+
+      responses: 
+        200:
+          description: card created successfully
+          content: 
+            application/json:
+              schema:
+                type: object
+                $ref: "#components/schemas/Card"
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /projects/cards/{card}:
+    get:
+      summary: fetch one card
+      description: fetch one specific card
+      security: 
+        - ApiKeyAuth: []
+
+      parameters:
+        - in: path
+          name: card
+          required: true
+          description: mongoDB card ID
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: return the card info or message as no cards is found
+          content: 
+            application/json:
+              schema:
+                type: object
+                $ref: "#components/schemas/Card"
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /projects/{project}/cards/{card}/update:
+    put:
+      summary: update a card
+      description: update a card by one o more properties
+      security: 
+        - ApiKeyAuth: []
+
+      parameters:
+        - in: path
+          name: project
+          required: true
+          description: mongoDB project ID
+          schema:
+            type: string
+
+        - in: path
+          name: card
+          required: true
+          description: mongoDB card ID
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: "#components/schemas/Card"
+
+      responses: 
+        201:
+          description: card updated successfully returns the new card
+          content: 
+            application/json:
+              schema:
+                type: object
+                $ref: "#components/schemas/Card"
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+  
+  /projects/cards/{card}/set-stage:
+    put:
+      summary: update card stage property
+      description: update card stage property
+      security: 
+        - ApiKeyAuth: []
+
+      parameters:
+        - in: path
+          name: card
+          required: true
+          description: mongoDB card ID
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stage:
+                  type: string
+                index:
+                  type: number
+
+      responses: 
+        201:
+          description: card updated successfully returns the new card
+          content: 
+            application/json:
+              schema:
+                type: object
+                $ref: "#components/schemas/Card"
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /projects/cards/{project}/{card}/delete:
+    delete:
+      summary: delete card
+      description: deletes card and removes its reference from the project cards list
+      security: 
+        - ApiKeyAuth: []
+
+      parameters:
+        - in: path
+          name: card
+          required: true
+          description: mongoDB card ID
+          schema:
+            type: string
+
+        - in: path
+          name: project
+          required: true
+          description: mongoDB project ID
+          schema:
+            type: string
+
+      responses: 
+        201:
+          description: card deleted successfully 
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /projects/{user}/{project}/{card}/members:
+    put:
+      summary: add user to card
+      description: adds user to card and to the project is user is new
+      security: 
+        - ApiKeyAuth: []
+
+      parameters:
+        - in: path
+          name: user
+          required: true
+          description: mongoDB user ID
+          schema:
+            type: string
+
+        - in: path
+          name: card
+          required: true
+          description: mongoDB card ID
+          schema:
+            type: string
+
+        - in: path
+          name: project
+          required: true
+          description: mongoDB project ID
+          schema:
+            type: string
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+
+      responses: 
+        200:
+          description: can inform that the user is not a member of the app, that the user is already a member on the project or that the user was successfully added to the card members list
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /projects/{user}/{project}/{card}/members/remove:
+    put:
+      summary: remove user from card
+      description: remove the user from card
+      security: 
+        - ApiKeyAuth: []
+
+      parameters:
+        - in: path
+          name: user
+          required: true
+          description: mongoDB user ID
+          schema:
+            type: string
+
+        - in: path
+          name: card
+          required: true
+          description: mongoDB card ID
+          schema:
+            type: string
+
+        - in: path
+          name: project
+          required: true
+          description: mongoDB project ID
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+
+      responses: 
+        200:
+          description: can inform that the user is not a member of the app, or that the user was successfully removed from the card members list
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+  
+  /projects/{user}/{project}/{card}/create-task:
+    post:
+      summary: crate a new task
+      description: create a new task and add its id to the tasks array on the respective card
+      security: 
+        - ApiKeyAuth: []
+
+      parameters:
+        - in: path
+          name: user
+          required: true
+          description: mongoDB user ID
+          schema:
+            type: string
+
+        - in: path
+          name: card
+          required: true
+          description: mongoDB card ID
+          schema:
+            type: string
+
+        - in: path
+          name: project
+          required: true
+          description: mongoDB project ID
+          schema:
+            type: string
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: "#components/schemas/Task"
+
+      responses: 
+        200:
+          description: task created successfully and added to the card tasks array
+          content: 
+            application/json:
+              schema:
+                type: object
+                $ref: "#components/schemas/Task"
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+  
+   
+  /projects/tasks/{task}/update:
+    put:
+      summary: update task
+      description: update a task, can be an test correction or just a state change
+      security: 
+        - ApiKeyAuth: []
+
+      parameters:
+        - in: path
+          name: task
+          required: true
+          description: mongoDB task ID
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: "#components/schemas/Task"
+
+      responses: 
+        201:
+          description: task updated 
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+
+  /projects/tasks/{task}:
+    get:
+      summary: fetch task
+      description: fetch one task by id
+      security: 
+        - ApiKeyAuth: []
+
+      parameters:
+        - in: path
+          name: task
+          required: true
+          description: mongoDB task ID
+          schema:
+            type: string
+
+      responses: 
+        200:
+          description: task updated 
+          content: 
+            application/json:
+              schema:
+                type: object
+                $ref: "#components/schemas/Task"
+
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'
+  
+  /projects/tasks/{card}/{task}/delete:
+    delete:
+      summary: delete task
+      description: delete one task by id and remove it from card task list
+      security: 
+        - ApiKeyAuth: []
+
+      parameters:
+        - in: path
+          name: task
+          required: true
+          description: mongoDB task ID
+          schema:
+            type: string
+
+      responses: 
+        201:
+          description: task updated 
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: 
+                    type: string
+
+        400:
+          $ref: '#/components/responses/400-error'
+
+        500: 
+          $ref: '#/components/responses/500'
+
+        401:
+          $ref: '#/components/responses/401'

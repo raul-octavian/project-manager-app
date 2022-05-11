@@ -122,7 +122,7 @@ router.put("/:user/update", verifyToken, async (req, res) => {
     return res.status(400).json({ error: error.details[0].message })
   }
 
-  User.findByIdAndUpdate(req.params.user, req.body)
+  User.findByIdAndUpdate(req.params.user, req.body, { new: true })
     .then(data => {
       if (!data) {
         res.status(400).send({ error: "cannot find user with id " + id })

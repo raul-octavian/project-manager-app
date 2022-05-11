@@ -4,6 +4,8 @@ const userRoute = require('./routes/user');
 const projectRoute = require('./routes/project');
 const cardRoute = require('./routes/card');
 const taskRoute = require('./routes/task');
+const swaggerUI = require('swagger-ui-express');
+const yaml = require('yamljs');
 // const stageRoute = require('./routes/stage')
 
 const { verifyToken } = require('./validate')
@@ -22,21 +24,9 @@ app.use(cors())
 //   next();
 // });
 
-// app.use(function (req, res, next) {
-
-//   req.header("Access-Control-Allow-Origin", "*");
-//   req.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT,DELETE"); // If using .fetch and not axios
-//   req.header("Access-Control-Allow-Headers", "auth-token, Origin, X-Requested-With, Content-Type, Accept");
-
-
-
-//   res.header("Access-Control-Allow-Origin", "*");
-//   res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT,DELETE"); // If using .fetch and not axios
-//   res.header("Access-Control-Allow-Headers", "auth-token, Origin, X-Requested-With, Content-Type, Accept");
-//   next();
-// })
-
 app.use(express.json());
+const swaggerDefinition = yaml.load('./swagger.yaml');
+app.use('/api/docs', swaggerUI.serve, swaggerUI.setup(swaggerDefinition));
 
 //variables
 
