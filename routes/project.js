@@ -96,15 +96,12 @@ router.put('/:project/add-stage', (req, res) => {
 //remove stage
 
 router.put('/:project/remove-stage', async (req, res) => {
-  console.log(req.params.project)
-  console.log(req.body.name)
 
   try {
 
     const project = await Project.findById(req.params.project);
     const cards = await project?.cards;
     const cardsOnStage = await cards.find(el => el.stage == req.body.name);
-    console.log(cardsOnStage)
 
 
     if (cardsOnStage) {
@@ -170,7 +167,7 @@ router.put('/:user/:project/members', async (req, res) => {
     Project.updateOne({ _id: req.params.project }, { $addToSet: { members: userInfo.id } })
       .then(data => {
         if (data && !userInfo) {
-          res.status(200).send({ message: 'there is no user with ${req.body.email} email address in our database, if email is correct we will send him an join link.' })
+          res.status(200).send({ message: `there is no user with ${req.body.email} email address in our database, if email is correct we will send him an join link.` })
         } else if (data) {
           res.status(200).send({ message: 'user added to the team' })
         }

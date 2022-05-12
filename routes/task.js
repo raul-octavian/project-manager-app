@@ -11,7 +11,6 @@ const { response } = require('express');
 
 
 router.post('/:user/:project/:card/create-task', (req, res) => {
-  console.log('req', req.body)
   Task.insertMany(req.body)
     .then(
       data => {
@@ -94,6 +93,8 @@ router.delete('/tasks/:card/:task/delete', (req, res) => {
 })
 
 // add users to task
+
+// not in use anymore after the task module was simplified
 
 router.put('/:user/:project/:card/:task/members', async (req, res) => {
 
