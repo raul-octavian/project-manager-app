@@ -18,11 +18,12 @@ let cors = require('cors')
 
 const app = express();
 app.use(cors())
-// app.use(function (req, res, next) {
-//   res.header("Access-Control-Allow-Origin", "*");
-//   res.header("Access-Control-Allow-Headers", "auth-token, Origin, X-Requested-With, Content-Type, Accept");
-//   next();
-// });
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Private-Network", "true")
+  res.header("Access-Control-Allow-Headers", "auth-token, Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 app.use(express.json());
 const swaggerDefinition = yaml.load('./swagger.yaml');

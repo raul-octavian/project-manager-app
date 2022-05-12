@@ -92,6 +92,8 @@ router.put('/:project/cards/:card/update', (req, res) => {
 
 //set stage
 
+// not in user anymore
+
 router.put('/cards/:card/set-stage', (req, res) => {
   const id = req.params.card;
 
@@ -119,9 +121,7 @@ router.delete('/cards/:project/:card/delete', async (req, res) => {
     let deletedTasks = await Card.findById(card_id).then(response => {
       if (response?.tasks.length) {
         for (const item of response.tasks) {
-          Task.findByIdAndRemove(item).then(
-            response => console.log(response)
-          )
+          Task.findByIdAndRemove(item)
         }
       }
     })
