@@ -97,11 +97,13 @@ describe('user workflow test', () => {
 
         chai.request(server)
           .post('/api/user/login')
-          .send(badLogin)
+          .send(login)
           .end((err, res) => {
-            res.should.have.status(400);
+            res.should.have.status(200);
             res.body.should.be.a('object');
-            res.body.should.have.property('error').eql('email is wrong');
+
+            token = res.body.data.token;
+            userID = res.body.data.user_id;
 
 
             // login good user
@@ -117,8 +119,7 @@ describe('user workflow test', () => {
             // res.body.data.should.have.property('token').be.a('string');
 
             //         // set values for future mutations
-            //         token = res.body.data.token;
-            //         userID = res.body.data.user_id;
+
 
             //         project.owner = userID
             //         project.members.push(userID)
