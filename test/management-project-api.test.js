@@ -9,12 +9,18 @@ chai.use(chaiHttp)
 
 describe('user workflow test', () => {
 
-  it('registers a user, loges in that user, creates a project, a card on that project and changes th e stage on that card from backlog to active', (done) => {
+  it('registers a user, loges in that user, creates a project, a card on that project and changes the stage on that card from backlog to active. The creates a new task on that card, and registers a new user. Adds the new user to aht card and checks that it is set on card and project. Update task status to true ', (done) => {
 
     // create register and login credential
     let user = {
       email: 'testUser@test.com',
       name: 'Test User',
+      password: '1234567890'
+    }
+
+    let userTwo = {
+      email: 'testUserTwo@test.com',
+      name: 'Test User Two',
       password: '1234567890'
     }
     let login = {
@@ -28,6 +34,7 @@ describe('user workflow test', () => {
     }
 
     let userID = '';
+    let userTwoID = '';
     let token = '';
     let projectID = '';
     let firstCardID = '';
@@ -164,18 +171,148 @@ describe('user workflow test', () => {
                                 res.body.should.have.property('stage').eql('active')
 
 
+                                // add one task to card
 
-                                done()
+                                chai.request(server)
+                                  .post(`/api/projects/${userID}/${projectID}/${firstCardID}/create-task`)
+                                  .set({ "auth-token": token })
+                                  .send(task)
+                                  .end((err, res) => {
+                                    res.should.have.status(200)
+                                    res.body.should.be.a('array')
+                                    res.body[0].should.have.property('taskName').be.a('string')
+                                    res.body[0].should.have.property('status').eql(false)
 
+                                    firstTaskID = res.body[0]._id
+
+
+                                    // register a new user to the project
+
+                                    chai.request(server)
+                                      .post('/api/user/register')
+                                      .send(userTwo)
+                                      .end((err, res) => {
+                                        expect(res.status).to.be.eql(200)
+                                        expect(res.body.error).to.be.eql(null)
+                                        expect(res.body.data).to.be.a('string');
+
+                                        userTwoID = res.body.data
+
+
+                                        // add userTwo to the card
+
+                                        chai.request(server)
+                                          .put(`/api/projects/${userID}/${projectID}/${firstCardID}/members`)
+                                          .set({ "auth-token": token })
+                                          .send({ email: userTwo.email })
+                                          .end((err, res) => {
+                                            res.should.have.status(200)
+
+
+                                            // test if the user is on the card and project members lists
+
+                                            chai.request(server)
+                                              .get(`/api/projects/${projectID}`)
+                                              .set({ "auth-token": token })
+                                              .end((err, res) => {
+                                                res.should.have.status(200)
+                                                res.body.should.be.a('object')
+                                                res.body.members.should.have.length(2)
+                                                res.body.members[1].should.have.property('_id').eql(userTwoID)
+                                                res.body.cards[0].cardMembers[0].should.have.property('_id').eql(userTwoID)
+
+
+                                                // update task status to true
+
+                                                chai.request(server)
+                                                  .put(`/api/projects/tasks/${firstTaskID}/update`)
+                                                  .set({ "auth-token": token })
+                                                  .send({
+                                                    status: true
+                                                  })
+                                                  .end((err, res) => {
+                                                    res.should.have.status(201)
+
+
+                                                    // check if the task was updated
+
+                                                    chai.request(server)
+                                                      .get(`/api/projects/tasks/${firstTaskID}`)
+                                                      .set({ "auth-token": token })
+                                                      .end((err, res) => {
+                                                        res.should.have.status(200)
+                                                        res.body.should.have.property('status').eql(true)
+
+
+                                                        // update card isComplete to true
+
+                                                        chai.request(server)
+                                                          .put(`/api/projects/${projectID}/cards/${firstCardID}/update`)
+                                                          .set({ "auth-token": token })
+                                                          .send({ isComplete: true })
+                                                          .end((err, res) => {
+                                                            res.should.have.status(201)
+                                                            res.body.should.have.property('isComplete').eql(true)
+
+
+                                                            // delete project
+
+                                                            chai.request(server)
+                                                              .delete(`/api/projects/${projectID}/delete`)
+                                                              .set({ "auth-token": token })
+                                                              .end((err, res) => {
+                                                                res.should.have.status(201)
+                                                                res.body.should.have.property('message').eql('project deleted')
+
+
+                                                                // assert that project is deleted
+
+                                                                chai.request(server)
+                                                                  .get(`/api/projects/${projectID}`)
+                                                                  .set({ "auth-token": token })
+                                                                  .end((err, res) => {
+                                                                    res.should.have.status(200)
+                                                                    res.body.should.have.property('message').be.a('string')
+
+
+                                                                    // assert that card is deleted
+
+                                                                    chai.request(server)
+                                                                      .get(`/api/projects//cards/${firstCardID}`)
+                                                                      .set({ "auth-token": token })
+                                                                      .end((err, res) => {
+                                                                        res.should.have.status(200)
+                                                                        res.body.should.have.property('message').be.a('string')
+
+
+                                                                        // assert that task is deleted
+
+                                                                        chai.request(server)
+                                                                          .get(`/api/projects/tasks/${firstTaskID}`)
+                                                                          .set({ "auth-token": token })
+                                                                          .end((err, res) => {
+                                                                            res.should.have.status(200)
+                                                                            res.body.should.have.property('message').be.a('string')
+
+
+                                                                            done()
+                                                                          })
+                                                                      })
+                                                                  })
+                                                              })
+                                                          })
+                                                      })
+                                                  })
+                                              })
+                                          })
+                                      })
+                                  })
                               })
                           })
                       })
-
                   })
               })
           })
       })
-
   })
-
 })

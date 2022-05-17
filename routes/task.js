@@ -5,6 +5,7 @@ const User = require('../models/user');
 const Task = require('../models/task');
 const { verifyToken } = require('../validate');
 const { response } = require('express');
+const cache = require('../cache/cache')
 
 
 //create task and add it to card
@@ -19,6 +20,7 @@ router.post('/:user/:project/:card/create-task', (req, res) => {
           Card.updateOne({ _id: req.params.card }, { $push: { tasks: `${id}` } }, { new: true })
             .then(card_data => {
               if (card_data) {
+                cache.flushAll();
                 res.status(200).send(data)
               } else {
                 res.status(400).send({ error: "there was an error retrieving card information or creating the task" })
@@ -26,7 +28,7 @@ router.post('/:user/:project/:card/create-task', (req, res) => {
             })
         }
       }).catch(err => {
-        res.status(500).send({ error: `there was an error creating task ${err.message}` })
+        sendError(res, err)
       })
 })
 
@@ -40,10 +42,11 @@ router.put('/tasks/:task/update', (req, res) => {
       if (!data) {
         res.status(400).send({ error: `cannot find the task with id ${task_id}` })
       } else {
+        cache.flushAll();
         res.status(201).send({ message: "task updated successfully" })
       }
     }).catch(err => {
-      res.status(500).send({ error: `error updating task with id ${task_id},  ${err.message}` })
+      sendError(res, err)
     })
 })
 
@@ -55,12 +58,13 @@ router.get('/tasks/:task', (req, res) => {
   Task.findById(req.params.task)
     .then(data => {
       if (!data) {
-        res.status(400).send({ error: `cannot find the task with id ${req.params.task}` })
+        res.status(200).send({ message: `cannot find the task with id ${req.params.task}, it might have been deleted` })
       } else {
+        cache.flushAll();
         res.status(200).send(data)
       }
     }).catch(err => {
-      res.status(500).send({ error: `error finding task with id ${req.params.task},  ${err.message}` })
+      sendError(res, err)
     })
 })
 
@@ -81,6 +85,7 @@ router.delete('/tasks/:card/:task/delete', (req, res) => {
           if (data?.tasks.find(item => item == task_id)) {
             res.status(400).send({ error: "cannot update card " + card_id })
           } else {
+            cache.flushAll();
             res.status(201).send({ message: "task deleted" })
           }
         })
@@ -88,7 +93,7 @@ router.delete('/tasks/:card/:task/delete', (req, res) => {
       res.status(400).send({ error: "the task not be found, it may have been deleted, refresh the page and try again" })
     }
   }).catch(err => {
-    res.status(500).send({ error: "error deleting the task with id: " + task_id + "error: " + err.message })
+    sendError(res, err)
   })
 })
 
@@ -102,7 +107,7 @@ router.put('/:user/:project/:card/:task/members', async (req, res) => {
 
     userInfo = await User.findOne({ email: req.body.email })
       .catch(err => {
-        res.status(500).send({ error: `there was an error adding user ${err.message}` })
+        sendError(res, err)
       });
 
     if (!userInfo) {
@@ -126,7 +131,7 @@ router.put('/:user/:project/:card/:task/members', async (req, res) => {
               res.status(200).send({ message: "user added to task " + userInfo.name })
             }
           }).catch(err => {
-            res.status(500).send({ error: `there was an error adding user ${err.message}` })
+            sendError(res, err)
           })
       }
     } else {
@@ -136,7 +141,7 @@ router.put('/:user/:project/:card/:task/members', async (req, res) => {
             console.log(userInfo.id)
           }
         }).catch(err => {
-          res.status(500).send({ error: `there was an error adding user ${err.message}` })
+          sendError(res, err)
         }).then(
           Task.updateOne({ _id: req.params.task }, { $addToSet: { taskMembers: userInfo.id } })
             .then(data => {
@@ -144,12 +149,12 @@ router.put('/:user/:project/:card/:task/members', async (req, res) => {
                 res.status(200).send({ message: "user added to task and project" })
               }
             }).catch(err => {
-              res.status(500).send({ error: `there was an error adding user ${err.message}` })
+              sendError(res, err)
             })
         )
     }
   } catch (err) {
-    res.status(500).send({ error: "err.message" })
+    sendError(res, err)
   }
 
 
@@ -165,7 +170,7 @@ router.put('/:user/:project/:card/:task/members/remove', async (req, res) => {
 
     userInfo = await User.findOne({ email: req.body.email })
       .catch(err => {
-        res.status(500).send({ error: `there was an error finding user ${err.message}` })
+        sendError(res, err)
       });
 
     if (!userInfo) {
@@ -180,16 +185,21 @@ router.put('/:user/:project/:card/:task/members/remove', async (req, res) => {
             res.status(200).send({ message: "user removed from task member list" })
           }
         }).catch(err => {
-          res.status(500).send({ error: `there was an error removing user ${err.message}` })
+          sendError(res, err)
         })
     } else {
       res.status(400).send({ error: "user is not on the task members list" })
     }
   } catch (err) {
-    res.status(500).send({ error: "err.message" })
+    sendError(res, err)
   }
 
 
 })
+
+const sendError = (res, err) => {
+  return res.status(500).send({ error: "there was an error " + err.message })
+}
+
 
 module.exports = router;

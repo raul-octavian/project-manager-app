@@ -1,13 +1,11 @@
 const router = require('express').Router();
-const { resetWatchers } = require('nodemon/lib/monitor/watch');
+
 const Project = require("../models/project");
 const Card = require("../models/card");
 const Task = require("../models/task")
 const User = require('../models/user');
-const { route } = require('./user');
-const { verifyToken } = require('../validate');
-const { response } = require('express');
-const { findOneAndUpdate } = require('../models/project');
+const cache = require('../cache/cache')
+
 
 
 //create card
@@ -25,7 +23,7 @@ router.post('/:project/create-card', async (req, res) => {
       .then(
         data => {
           if (data) {
-            console.log('card data', data)
+            cache.flushAll();
             const id = data[0].toObject()._id
             Project.updateOne({ _id: req.params.project }, { $push: { cards: `${id}` } }, { new: true })
               .then(project => {
@@ -38,11 +36,11 @@ router.post('/:project/create-card', async (req, res) => {
               })
           }
         }).catch(err => {
-          res.status(500).send({ error: `there was an error creating card ${err.message}` })
+          sendError(res, err)
         })
 
   } catch (err) {
-    res.status(500).send({ error: `there was an error creating card ${err.message}` })
+    sendError(res, err)
 
   }
 
@@ -60,10 +58,10 @@ router.get('/cards/:card', (req, res) => {
 
         res.status(200).send(data)
       } else {
-        res.status(200).send({ message: "search found no results" })
+        res.status(200).send({ message: "search found no results, the card might have been deleted" })
       }
     }).catch(err => {
-      res.status(500).send({ error: "there was an error" + err.message })
+      sendError(res, err)
     })
 })
 
@@ -80,13 +78,13 @@ router.put('/:project/cards/:card/update', (req, res) => {
       if (!data) {
         res.status(400).send({ error: `cannot find the card with id ${id}` })
       } else {
+        cache.flushAll();
         res.status(201).send(data)
-        console.log(data)
       }
     }).then(
       setUsedHoursOnProject(card, projectId)
     ).catch(err => {
-      res.status(500).send({ error: `error updating card with id ${id},  ${err.message}` })
+      sendError(res, err)
     })
 })
 
@@ -102,10 +100,11 @@ router.put('/cards/:card/set-stage', (req, res) => {
       if (!data) {
         res.status(400).send({ error: `cannot find the card with id ${id}` })
       } else {
+        cache.flushAll();
         res.status(201).send(data)
       }
     }).catch(err => {
-      res.status(500).send({ error: `error updating card with id ${id},  ${err.message}` })
+      sendError(res, err)
     })
 })
 
@@ -133,6 +132,7 @@ router.delete('/cards/:project/:card/delete', async (req, res) => {
             if (data?.cards.find(item => item == card_id)) {
               res.status(400).send({ error: "cannot delete card from project " + project_id })
             } else {
+              cache.flushAll();
               res.status(201).send({ message: "card deleted from project" })
             }
           })
@@ -140,11 +140,11 @@ router.delete('/cards/:project/:card/delete', async (req, res) => {
         res.status(400).send({ error: "the card could not be found, it may have been deleted, refresh the page and try again" })
       }
     }).catch(err => {
-      res.status(500).send({ error: "error deleting the card with id: " + card_id + "error: " + err.message })
+      sendError(res, err)
     })
 
   } catch (err) {
-    res.status(500).send({ error: "there was an error deleting the card " + err.message })
+    sendError(res, err)
   }
 });
 
@@ -153,10 +153,9 @@ router.delete('/cards/:project/:card/delete', async (req, res) => {
 router.put('/:user/:project/:card/members', async (req, res) => {
 
   try {
-
-    userInfo = await User.findOne({ email: req.body.email })
+    let userInfo = await User.findOne({ email: req.body.email })
       .catch(err => {
-        res.status(500).send({ error: `there was an error adding user ${err.message}` })
+        sendError(res, err)
         return
       });
 
@@ -170,46 +169,50 @@ router.put('/:user/:project/:card/members', async (req, res) => {
 
     const cardMembers = [];
 
+
     const projectMembers = [];
 
     if (userExistsOnProject.length) {
       if (userExistsOnCard.length) {
-        cardMembers = res.status(200).send({ message: "user is already a member on this card" })
+        res.status(200).send({ message: "user is already a member on this card" })
+        return
       } else {
         Card.updateOne({ _id: req.params.card }, { $addToSet: { cardMembers: userInfo.id } })
           .then(data => {
             if (data) {
+              cache.flushAll();
               res.status(200).send({ message: "user added to card" })
             }
           }).catch(err => {
-            res.status(500).send({ error: `there was an error adding user ${err.message}` })
+            sendError(res, err)
           })
       }
     } else {
+      console.log("user not on project")
       Project.updateOne({ _id: req.params.project }, { $addToSet: { members: userInfo.id } })
         .then(data => {
           if (data) {
 
           }
         }).catch(err => {
-          res.status(500).send({ error: `there was an error adding user ${err.message}` })
+          sendError(res, err)
           return
         }).then(
           Card.updateOne({ _id: req.params.card }, { $addToSet: { cardMembers: userInfo.id } })
             .then(data => {
               if (data) {
+                cache.flushAll();
                 res.status(200).send({ message: "user added to card and project" })
               }
             }).catch(err => {
-              res.status(500).send({ error: `there was an error adding user ${err.message}` })
+              sendError(res, err)
               return
             })
         )
     }
   } catch (err) {
-    res.status(500).send({ error: "err.message" })
+    sendError(res, err)
   }
-
 
 });
 
@@ -222,7 +225,7 @@ router.put('/:user/:project/:card/members/remove', async (req, res) => {
 
     userInfo = await User.findOne({ email: req.body.email })
       .catch(err => {
-        res.status(500).send({ error: `there was an error finding user ${err.message}` })
+        sendError(res, err)
       });
 
 
@@ -236,17 +239,17 @@ router.put('/:user/:project/:card/members/remove', async (req, res) => {
       Card.updateOne({ _id: req.params.card }, { $pull: { cardMembers: userInfo.id } })
         .then(data => {
           if (data) {
-            console.log(data)
+            cache.flushAll();
             res.status(200).send({ message: "user removed from card member list" })
           }
         }).catch(err => {
-          res.status(500).send({ error: `there was an error adding user ${err.message}` })
+          sendError(res, err)
         })
     } else {
       res.status(400).send({ error: "user is not on the card members list" })
     }
   } catch (err) {
-    res.status(500).send({ error: "err.message" })
+    sendError(res, err)
   }
 
 })
@@ -255,9 +258,6 @@ const setUsedHoursOnProject = async (card, projectId) => {
   if (card) {
     const project = await Project.findById(projectId);
     const cards = project.cards
-    cards.map(item => {
-      console.log(item.cardUsedHours)
-    })
     let allUsedHours = 0;
     cards.forEach((item) => {
       allUsedHours += item.cardUsedHours
@@ -265,9 +265,12 @@ const setUsedHoursOnProject = async (card, projectId) => {
     allUsedHours.toFixed(2)
     project.timeSchedule.usedHours = allUsedHours
     Project.findByIdAndUpdate(projectId, project, { new: true }).then(data => {
-      console.log(data.timeSchedule)
     })
   }
+}
+
+const sendError = (res, err) => {
+  return res.status(500).send({ error: "there was an error " + err.message })
 }
 
 module.exports = router;

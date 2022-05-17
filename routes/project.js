@@ -1,10 +1,10 @@
 const router = require('express').Router();
-const { resetWatchers } = require('nodemon/lib/monitor/watch');
 const Card = require('../models/card');
 const Task = require('../models/task')
 const Project = require('../models/project');
 const User = require('../models/user');
-const { route } = require('./user');
+const cache = require('../cache/cache')
+
 
 
 //create project
@@ -14,36 +14,52 @@ router.post('/:user/create', (req, res) => {
 
   Project.insertMany(data)
     .then(data => {
+      cache.flushAll();
       res.status(200).send(data);
     }).catch(err => {
-      res.status(500).send({ error: err.message })
+      sendError(res, err)
     })
 });
 
 //get all project where user is member
 
 router.get('/:user/all', (req, res) => {
-  Project.find({ "members": req.params.user })
-    .then(data => {
-      if (data) {
-        projectNames = data.map((item) => {
 
-          return {
-            name: item.name,
-            id: item._id,
-            description: item.description,
-            dueDate: item.timeSchedule.dueDate || "",
-            availableHours: (item.timeSchedule.allocatedHours - item.timeSchedule.usedHours).toFixed(2) || 0,
-            usedHours: item.timeSchedule.usedHours
+  try {
+    let simpleProjectsCache = cache.get('simpleProjects');
+
+    if (!simpleProjectsCache) {
+      Project.find({ "members": req.params.user })
+        .then(data => {
+          if (data) {
+            projectNames = data.map((item) => {
+
+              return {
+                name: item.name,
+                id: item._id,
+                description: item.description,
+                dueDate: item.timeSchedule.dueDate || "",
+                availableHours: (item.timeSchedule.allocatedHours - item.timeSchedule.usedHours).toFixed(2) || 0,
+                usedHours: item.timeSchedule.usedHours
+              }
+            })
+            cache.set('simpleProjects', projectNames);
+            res.status(200).send(projectNames);
+          } else {
+            res.status(400).send({ error: "there are no result found" })
           }
+        }).catch(err => {
+          sendError(res, err)
         })
-        res.status(200).send(projectNames);
-      } else {
-        res.status(400).send({ error: "there are no result found" })
-      }
-    }).catch(err => {
-      res.status(500).send({ error: err.message })
-    })
+
+    } else {
+      res.status(200).send(simpleProjectsCache);
+    }
+
+  } catch (err) {
+    sendError(res, err)
+  }
+
 });
 
 
@@ -51,6 +67,8 @@ router.get('/:user/all', (req, res) => {
 
 
 router.get('/:project', (req, res) => {
+
+
   Project.findById(req.params.project)
     .then(data => {
       if (data) {
@@ -59,22 +77,35 @@ router.get('/:project', (req, res) => {
         res.status(200).send({ message: "The search found no result, the project might have been deleted, make sure the project id " + req.params.project + " is correct" })
       }
     }).catch(err => {
-      res.status(500).send({ error: `there was an error ${err.message}` });
+      sendError(res, err)
     })
 })
 //get project where user is owner
 
 router.get('/:user/owned', (req, res) => {
-  Project.find({ "owner": req.params.user })
-    .then(data => {
-      if (data) {
-        res.status(200).send(data);
-      } else {
-        res.status(400).send({ error: "there are no result found" })
-      }
-    }).catch(err => {
-      res.status(500).send({ error: err.message })
-    })
+
+  try {
+    let ownedProjectCache = cache.get('ownedProject')
+
+    if (!ownedProjectCache) {
+      Project.find({ "owner": req.params.user })
+        .then(data => {
+          if (data) {
+            cache.set('ownedProjects', data)
+            res.status(200).send(data);
+          } else {
+            res.status(400).send({ error: "there are no result found" })
+          }
+        }).catch(err => {
+          sendError(res, err)
+        })
+    }
+
+  } catch (err) {
+    sendError(res, err)
+  }
+
+
 });
 
 //add stage
@@ -84,12 +115,13 @@ router.put('/:project/add-stage', (req, res) => {
   Project.findByIdAndUpdate(req.params.project, { $addToSet: { stages: req.body.name } }, { new: true, upsert: true })
     .then(data => {
       if (data) {
+        cache.flushAll();
         res.status(201).send(data);
       } else {
         res.status(400).send({ error: "something went wrong" });
       }
     }).catch(err => {
-      res.status(500).send({ error: `error updating project with id ${req.params.project},  ${err.message}` })
+      sendError(res, err)
     })
 })
 
@@ -113,17 +145,18 @@ router.put('/:project/remove-stage', async (req, res) => {
       Project.findByIdAndUpdate(req.params.project, { $pull: { stages: req.body.name } }, { new: true })
         .then(data => {
           if (data) {
+            cache.flushAll();
             res.status(201).send(data);
           } else {
             res.status(400).send({ error: "something went wrong" });
           }
         }).catch(err => {
-          res.status(500).send({ error: `error removing project with id ${req.params.project},  ${err.message}` })
+          sendError(res, err)
         })
     }
 
   } catch (err) {
-    res.status(500).send({ error: "delete aborted " + err.message })
+    sendError(res, err)
   }
 
 })
@@ -138,10 +171,11 @@ router.put('/:user/:project', (req, res) => {
       if (!data) {
         res.status(400).send({ error: `cannot find the project with id ${project_id}` })
       } else {
+        cache.flushAll();
         res.status(201).send({ message: "project updated successfully" })
       }
     }).catch(err => {
-      res.status(500).send({ error: `error updating project with id ${project_id},  ${err.message}` })
+      sendError(res, err)
     })
 });
 
@@ -151,7 +185,7 @@ router.put('/:user/:project/members', async (req, res) => {
 
   userInfo = await User.findOne({ email: req.body.email })
     .catch(err => {
-      res.status(500).send({ error: `user does not exist in our database` })
+      sendError(res, err)
       return
     });
 
@@ -169,10 +203,11 @@ router.put('/:user/:project/members', async (req, res) => {
         if (data && !userInfo) {
           res.status(200).send({ message: `there is no user with ${req.body.email} email address in our database, if email is correct we will send him an join link.` })
         } else if (data) {
+          cache.flushAll();
           res.status(200).send({ message: 'user added to the team' })
         }
       }).catch(err => {
-        res.status(500).send({ error: `there was an error adding user ${err.message}` })
+        sendError(res, err)
       })
   }
 });
@@ -183,7 +218,7 @@ router.put('/:user/:project/members/remove', async (req, res) => {
 
   const userInfo = await User.findOne({ email: req.body.email })
     .catch(err => {
-      res.status(500).send({ error: `there was an error finding user ${err.message}` })
+      sendError(res, err)
     });
 
   if (!userInfo) {
@@ -206,10 +241,12 @@ router.put('/:user/:project/members/remove', async (req, res) => {
 
   if (userExistsOnProject.length) {
     Project.findOneAndUpdate({ _id: req.params.project, "members": userInfo.id }, { $pull: { members: userInfo.id } }, { new: true })
-      .then(project =>
-        res.status(201).send({ message: "user removed from the project" }))
+      .then(project => {
+        cache.flushAll()
+        res.status(201).send({ message: "user removed from the project" })
+      })
       .catch(err => {
-        res.status(500).send({ error: `there was an error removing user ${err.message}` })
+        sendError(res, err)
       })
   }
 })
@@ -229,31 +266,33 @@ router.delete('/:project/delete', async (req, res) => {
         deletedTasks = await Card.findById(el).then(response => {
           if (response?.tasks.length) {
             for (const item of response.tasks) {
-              Task.findByIdAndRemove(item).then(
-                console.log(`tasks deleted`, item)
-              )
+              Task.findByIdAndRemove(item)
             }
           }
         });
         deletedCards = await Card.findByIdAndDelete(el)
-          .then(console.log("card deleted"))
       }
     }
 
     Project.findByIdAndRemove(project_id).then(response => {
       if (response) {
+        cache.flushAll()
         res.status(201).send({ message: "project deleted" })
       } else {
         res.status(400).send({ error: "the project could not be found, it may have been deleted, refresh the page and try again" })
       }
     }).catch(err => {
-      res.status(500).send({ error: "error deleting the card with id: " + card_id + "error: " + err.message })
+      sendError(res, err)
     })
   } catch (err) {
-    res.status(500).send({ error: "delete aborted " + err.message })
+    sendError(res, err)
   }
 
 })
+
+const sendError = (res, err) => {
+  return res.status(500).send({ error: "there was an error " + err.message })
+}
 
 
 module.exports = router;
