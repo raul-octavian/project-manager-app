@@ -128,14 +128,8 @@ describe('user workflow test', () => {
           .send(badLogin)
           .end((err, res) => {
             console.log(res.body)
-            res.should.have.status(200);
+            res.should.have.status(400);
             res.body.should.be.a('object');
-
-            done()
-
-            token = res.body.data.token;
-            userID = res.body.data.user_id;
-
 
             // login good user
 
@@ -149,11 +143,11 @@ describe('user workflow test', () => {
                 res.body.data.should.have.property('user_id').be.a('string');
                 res.body.data.should.have.property('token').be.a('string');
 
-                //         // set values for future mutations
+                // set values for future mutations
 
 
-                //         project.owner = userID
-                //         project.members.push(userID)
+                project.owner = userID
+                project.members.push(userID)
 
                 //         // create first project
 
