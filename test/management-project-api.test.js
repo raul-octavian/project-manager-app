@@ -106,6 +106,8 @@ describe('user workflow test', () => {
             res.should.have.status(200);
             res.body.should.be.a('object');
 
+            done()
+
             // token = res.body.data.token;
             // userID = res.body.data.user_id;
 
@@ -381,7 +383,7 @@ describe('user workflow test', () => {
             //                   })
             //               })
             //           })
-            done()
+
             // })
 
           })
