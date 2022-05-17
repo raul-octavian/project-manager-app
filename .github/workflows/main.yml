@@ -31,8 +31,8 @@ jobs:
           npm test
         env:
           DBHOST: ${{ secrets.DBHOST }}
-          TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
-          JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
+          SECRET: ${{ secrets.TOKEN_SECRET }}
+          TOKEN_LIFE: ${{ secrets.JWT_EXPIRES_IN }}
 
   # deploy:
   #   name: Deploy
