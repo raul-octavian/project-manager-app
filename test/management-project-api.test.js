@@ -39,6 +39,8 @@ describe('user workflow test', () => {
     let projectID = '';
     let firstCardID = '';
     let firstTaskID = '';
+    let secondCardID = '';
+    let secondTaskID = ''
 
     // create mock project info
 
@@ -63,6 +65,9 @@ describe('user workflow test', () => {
     let card = {
       cardName: "first ever card in tests"
     }
+    let cardTwo = {
+      cardName: "second ever card in tests"
+    }
 
     // used to update the cards stage 
     const active = {
@@ -71,6 +76,10 @@ describe('user workflow test', () => {
 
     const task = {
       taskName: "first task",
+      taskDescription: "some basic thing to do"
+    }
+    const taskTwo = {
+      taskName: "second task",
       taskDescription: "some basic thing to do"
     }
 
@@ -255,47 +264,104 @@ describe('user workflow test', () => {
                                                             res.body.should.have.property('isComplete').eql(true)
 
 
-                                                            // delete project
+                                                            // add a second card to project
 
                                                             chai.request(server)
-                                                              .delete(`/api/projects/${projectID}/delete`)
+                                                              .post(`/api/projects/${projectID}/create-card`)
                                                               .set({ "auth-token": token })
+                                                              .send(cardTwo)
                                                               .end((err, res) => {
-                                                                res.should.have.status(201)
-                                                                res.body.should.have.property('message').eql('project deleted')
+                                                                res.should.have.status(200)
+                                                                res.body.should.be.a('array')
+                                                                res.body.should.have.lengthOf(1)
+                                                                res.body[0].should.have.property('stage').eql('backlog')
+                                                                res.body[0].should.have.property('isComplete').eql(false)
+                                                                res.body[0].should.have.property('index').eql(1)
+
+                                                                secondCardID = res.body[0]._id
 
 
-                                                                // assert that project is deleted
+                                                                // add a task to second card
 
                                                                 chai.request(server)
-                                                                  .get(`/api/projects/${projectID}`)
+                                                                  .post(`/api/projects/${userID}/${projectID}/${secondCardID}/create-task`)
                                                                   .set({ "auth-token": token })
+                                                                  .send(taskTwo)
                                                                   .end((err, res) => {
                                                                     res.should.have.status(200)
-                                                                    res.body.should.have.property('message').be.a('string')
+                                                                    res.body.should.be.a('array')
+                                                                    res.body[0].should.have.property('taskName').be.a('string')
+                                                                    res.body[0].should.have.property('status').eql(false)
+
+                                                                    secondTaskID = res.body[0]._id
 
 
-                                                                    // assert that card is deleted
+                                                                    // delete second card
 
                                                                     chai.request(server)
-                                                                      .get(`/api/projects//cards/${firstCardID}`)
+                                                                      .delete(`/api/projects/cards/${projectID}/${secondCardID}/delete`)
                                                                       .set({ "auth-token": token })
                                                                       .end((err, res) => {
-                                                                        res.should.have.status(200)
-                                                                        res.body.should.have.property('message').be.a('string')
+                                                                        res.should.have.status(201)
+                                                                        res.body.should.have.property('message').eql('card deleted from project')
 
 
-                                                                        // assert that task is deleted
+                                                                        // check if the second task is deleted
 
                                                                         chai.request(server)
-                                                                          .get(`/api/projects/tasks/${firstTaskID}`)
+                                                                          .get(`/api/projects/tasks/${secondTaskID}`)
                                                                           .set({ "auth-token": token })
                                                                           .end((err, res) => {
                                                                             res.should.have.status(200)
                                                                             res.body.should.have.property('message').be.a('string')
 
 
-                                                                            done()
+                                                                            // delete project
+
+                                                                            chai.request(server)
+                                                                              .delete(`/api/projects/${projectID}/delete`)
+                                                                              .set({ "auth-token": token })
+                                                                              .end((err, res) => {
+                                                                                res.should.have.status(201)
+                                                                                res.body.should.have.property('message').eql('project deleted')
+
+
+                                                                                // assert that project is deleted
+
+                                                                                chai.request(server)
+                                                                                  .get(`/api/projects/${projectID}`)
+                                                                                  .set({ "auth-token": token })
+                                                                                  .end((err, res) => {
+                                                                                    res.should.have.status(200)
+                                                                                    res.body.should.have.property('message').be.a('string')
+
+
+                                                                                    // assert that card is deleted
+
+                                                                                    chai.request(server)
+                                                                                      .get(`/api/projects//cards/${firstCardID}`)
+                                                                                      .set({ "auth-token": token })
+                                                                                      .end((err, res) => {
+                                                                                        res.should.have.status(200)
+                                                                                        res.body.should.have.property('message').be.a('string')
+
+
+                                                                                        // assert that task is deleted
+
+                                                                                        chai.request(server)
+                                                                                          .get(`/api/projects/tasks/${firstTaskID}`)
+                                                                                          .set({ "auth-token": token })
+                                                                                          .end((err, res) => {
+                                                                                            console.log(res.body)
+                                                                                            res.should.have.status(200)
+                                                                                            res.body.should.have.property('message').be.a('string')
+
+
+                                                                                            done()
+                                                                                          })
+                                                                                      })
+                                                                                  })
+                                                                              })
                                                                           })
                                                                       })
                                                                   })

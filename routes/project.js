@@ -258,23 +258,18 @@ router.delete('/:project/delete', async (req, res) => {
   const project_id = req.params.project;
 
   try {
-    let foundCards = await Project.findById(req.params.project);
-    let deletedTasks = []
-    let deletedCards = []
-    if (foundCards?.cards.length) {
-      for (const el of foundCards.cards) {
-        deletedTasks = await Card.findById(el).then(response => {
-          if (response?.tasks.length) {
-            for (const item of response.tasks) {
-              Task.findByIdAndRemove(item)
-            }
-          }
-        });
-        deletedCards = await Card.findByIdAndDelete(el)
-      }
+    let projectToBeDeleted = await Project.findById(req.params.project);
+
+    if (projectToBeDeleted?.cards.length) {
+      projectToBeDeleted.cards.map(async item => {
+        item?.tasks.map(async task => {
+          let taskDeleted = await Task.findByIdAndDelete(task._id)
+        })
+        let cardDeleted = await Card.findByIdAndDelete(item._id)
+      })
     }
 
-    Project.findByIdAndRemove(project_id).then(response => {
+    Project.findByIdAndDelete(project_id).then(response => {
       if (response) {
         cache.flushAll()
         res.status(201).send({ message: "project deleted" })

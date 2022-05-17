@@ -117,15 +117,14 @@ router.delete('/cards/:project/:card/delete', async (req, res) => {
 
   try {
 
-    let deletedTasks = await Card.findById(card_id).then(response => {
-      if (response?.tasks.length) {
-        for (const item of response.tasks) {
-          Task.findByIdAndRemove(item)
-        }
-      }
+    let cardToBeDeleted = await Card.findById(card_id);
+
+    const tasksDeleted = await cardToBeDeleted?.tasks.map(async item => {
+      let taskDeleted = await Task.findByIdAndDelete(item._id)
     })
 
-    Card.findByIdAndRemove(card_id).then(response => {
+
+    deletedCard = await Card.findByIdAndRemove(card_id).then(response => {
       if (response) {
         Project.findByIdAndUpdate(project_id, { $pull: { cards: card_id } }, { new: true })
           .then(data => {
