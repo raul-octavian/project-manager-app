@@ -5,6 +5,8 @@ const should = chai.should();
 const chaiHttp = require('chai-http')
 const server = require('../server')
 
+
+
 chai.use(chaiHttp)
 
 describe('user workflow test', () => {
@@ -83,28 +85,51 @@ describe('user workflow test', () => {
       taskDescription: "some basic thing to do"
     }
 
-
     chai.request(server)
       .post('/api/user/register')
       .send(user)
       .end((err, res) => {
         console.log(res.body)
-        expect(res.status).to.be.eql(200)
+        expect(res.status).to.be.eql(200);
         expect(res.body.error).to.be.eql(null)
         expect(res.body.data).to.be.a('string');
 
-        console.log("register ends")
 
-
-        // login bad user
-
+        //Login the user 
         chai.request(server)
           .post('/api/user/login')
           .send(login)
           .end((err, res) => {
-            console.log(res.body)
             res.should.have.status(200);
             res.body.should.be.a('object');
+            res.body.should.have.property('error').eql(null);
+            res.body.data.should.have.property('user_id').be.a('string');
+            res.body.data.should.have.property('token').be.a('string');
+            token = res.body.data.token;
+            userID = res.body.data.user_id;
+
+
+            // chai.request(server)
+            //   .post('/api/user/register')
+            //   .send(user)
+            //   .end((err, res) => {
+            //     console.log(res.body)
+            //     expect(res.status).to.be.eql(200)
+            //     expect(res.body.error).to.be.eql(null)
+            //     expect(res.body.data).to.be.a('string');
+
+            //     console.log("register ends")
+
+
+            //     // login bad user
+
+            //     chai.request(server)
+            //       .post('/api/user/login')
+            //       .send(login)
+            //       .end((err, res) => {
+            //         console.log(res.body)
+            //         res.should.have.status(200);
+            //         res.body.should.be.a('object');
 
             done()
 
