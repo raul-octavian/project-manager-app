@@ -99,6 +99,7 @@ describe('user workflow test', () => {
           .post('/api/user/login')
           .send(login)
           .end((err, res) => {
+            console.log(res.body)
             res.should.have.status(200);
             res.body.should.be.a('object');
 
