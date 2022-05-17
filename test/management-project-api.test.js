@@ -352,7 +352,6 @@ describe('user workflow test', () => {
                                                                                           .get(`/api/projects/tasks/${firstTaskID}`)
                                                                                           .set({ "auth-token": token })
                                                                                           .end((err, res) => {
-                                                                                            console.log(res.body)
                                                                                             res.should.have.status(200)
                                                                                             res.body.should.have.property('message').be.a('string')
 
