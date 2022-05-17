@@ -88,6 +88,7 @@ describe('user workflow test', () => {
       .post('/api/user/register')
       .send(user)
       .end((err, res) => {
+        console.log(res.body)
         expect(res.status).to.be.eql(200)
         expect(res.body.error).to.be.eql(null)
         expect(res.body.data).to.be.a('string');
@@ -103,8 +104,8 @@ describe('user workflow test', () => {
             res.should.have.status(200);
             res.body.should.be.a('object');
 
-            token = res.body.data.token;
-            userID = res.body.data.user_id;
+            // token = res.body.data.token;
+            // userID = res.body.data.user_id;
 
 
             // login good user
