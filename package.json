@@ -4,8 +4,8 @@
   "description": "a kanban trello app made for the API and PWA Exam at EASV Esbjerg 2022",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "start-dev": "nodemon server.js",
+    "start": "cross-env NODE_ENV=development node server.js",
+    "start-dev": "cross-env NODE_ENV=development nodemon server.js",
     "test": "cross-env NODE_ENV=test mocha --exit"
   },
   "keywords": [
