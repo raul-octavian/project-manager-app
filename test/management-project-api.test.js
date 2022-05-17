@@ -93,6 +93,8 @@ describe('user workflow test', () => {
         expect(res.body.error).to.be.eql(null)
         expect(res.body.data).to.be.a('string');
 
+        console.log("register ends")
+
 
         // login bad user
 
