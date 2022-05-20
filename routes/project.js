@@ -24,37 +24,29 @@ router.post('/:user/create', (req, res) => {
 //get all project where user is member
 
 router.get('/:user/all', (req, res) => {
-
   try {
-    let simpleProjectsCache = cache.get('simpleProjects');
+    Project.find({ "members": req.params.user })
+      .then(data => {
+        if (data) {
+          projectNames = data.map((item) => {
 
-    if (!simpleProjectsCache) {
-      Project.find({ "members": req.params.user })
-        .then(data => {
-          if (data) {
-            projectNames = data.map((item) => {
-
-              return {
-                name: item.name,
-                id: item._id,
-                description: item.description,
-                dueDate: item.timeSchedule.dueDate || "",
-                availableHours: (item.timeSchedule.allocatedHours - item.timeSchedule.usedHours).toFixed(2) || 0,
-                usedHours: item.timeSchedule.usedHours
-              }
-            })
-            cache.set('simpleProjects', projectNames);
-            res.status(200).send(projectNames);
-          } else {
-            res.status(400).send({ error: "there are no result found" })
-          }
-        }).catch(err => {
-          sendError(res, err)
-        })
-
-    } else {
-      res.status(200).send(simpleProjectsCache);
-    }
+            return {
+              name: item.name,
+              id: item._id,
+              description: item.description,
+              dueDate: item.timeSchedule.dueDate || "",
+              availableHours: (item.timeSchedule.allocatedHours - item.timeSchedule.usedHours).toFixed(2) || 0,
+              usedHours: item.timeSchedule.usedHours
+            }
+          })
+          cache.set('simpleProjects', projectNames);
+          res.status(200).send(projectNames);
+        } else {
+          res.status(400).send({ error: "there are no result found" })
+        }
+      }).catch(err => {
+        sendError(res, err)
+      })
 
   } catch (err) {
     sendError(res, err)
@@ -86,8 +78,9 @@ router.get('/:user/owned', (req, res) => {
 
   try {
     let ownedProjectCache = cache.get('ownedProject')
+    let userOnProject = simpleProjectsCache[0].owner == req.params.user
 
-    if (!ownedProjectCache) {
+    if (!ownedProjectCache && !userOnProject) {
       Project.find({ "owner": req.params.user })
         .then(data => {
           if (data) {

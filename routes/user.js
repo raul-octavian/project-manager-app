@@ -57,6 +57,7 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: error.details[0].message })
   }
 
+
   //find user
 
   const foundUser = await User.findOne({ email: req.body.email });
