@@ -132,8 +132,9 @@ router.put("/:user/update", verifyToken, async (req, res) => {
       }
     })
     .catch(err => {
-      res.status(500).send({ error: "error updating the toto with id: " + id })
+      res.status(500).send({ error: "error updating user with id: " + id })
     })
 })
+
 
 module.exports = router;
